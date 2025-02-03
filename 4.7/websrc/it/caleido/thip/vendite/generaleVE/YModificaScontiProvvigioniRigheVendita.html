@@ -1,0 +1,102 @@
+<html>
+<head></head>
+<body style="margin: 0px; overflow: hidden;">
+	<form name="YModificaScProvRigheVenForm">
+		<table height="100%" width="100%" cellspacing="0" cellpadding="0"
+			id="emptyborder">
+			<!-- 			<tr> -->
+			<!-- 				<td style="height: 0"><span class="toolbar" id="myToolBar" /></td> -->
+			<!-- 			</tr> -->
+			<tr>
+				<td><input type="hidden" name="IdAzienda" id="IdAzienda" /></td>
+			</tr>
+			<tr>
+				<td><input type="hidden" name="ClassName" id="ClassName" /></td>
+			</tr>
+			<tr>
+				<td><input type="hidden" name="ChiaviSelezionati"
+					id="ChiaviSelezionati" /></td>
+			</tr>
+			<tr>
+				<td>
+					<table>
+						<tr>
+							<td>
+								<fieldset style="width: fit-content;display: inline;">
+									<legend>Sconti</legend>
+									<table>
+										<tr>
+											<td><label for="ScontoArticolo1"></label></td>
+											<td><input type="text" id="ScontoArticolo1"
+												name="ScontoArticolo1" /></td>
+										</tr>
+										<tr>
+											<td><label for="ScontoArticolo2"></label></td>
+											<td><input type="text" id="ScontoArticolo2"
+												name="ScontoArticolo2" /></td>
+										</tr>
+										<tr>
+											<td><label for="Maggiorazione"></label></td>
+											<td><input type="text" id="Maggiorazione"
+												name="Maggiorazione" /></td>
+										</tr>
+										<tr>
+											<td><label for="Sconto"></label></td>
+											<td colspan="2"><span class="multisearchform"
+												id="Sconto"></span></td>
+										</tr>
+									</table>
+								</fieldset>
+								<button
+									style="width: 125px; display: inline; margin-top: 2.5rem; margin-left: 1rem"
+									name="bottoneConferma" id="bottoneConferma"
+									onClick="conferma()" type="button">Conferma modifica</button>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<fieldset style="width: fit-content;">
+									<legend>Provvigioni</legend>
+									<table>
+										<tr>
+											<td><label for="Agente"></label></td>
+											<td colspan="2"><span class="multisearchform"
+												id="Agente"></span></td>
+										</tr>
+										<tr>
+											<td><label for="Provvigione2Agente"></label></td>
+											<td><input type="text" id="Provvigione2Agente"
+												name="Provvigione2Agente" /></td>
+											<td><input type="text" id="AlfanumRiservatoUtente1"
+												name="AlfanumRiservatoUtente1" /></td>
+											<td><label for="FlagRiservatoUtente1"></label></td>
+											<td><select name="FlagRiservatoUtente1"
+												id="FlagRiservatoUtente1">
+													<option></option>
+											</select></td>
+										</tr>
+										<tr>
+											<td><label for="Subagente"></label></td>
+											<td colspan="2"><span class="multisearchform"
+												id="Subagente"></span></td>
+										</tr>
+										<tr>
+											<td><label for="Provvigione2Subagente"></label></td>
+											<td><input type="text" id="Provvigione2Subagente"
+												name="Provvigione2Subagente" /></td>
+										</tr>
+									</table>
+								</fieldset>
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+			<tr>
+				<td style="height: 0"><span class="errorlist" /></td>
+			</tr>
+		</table>
+	</form>
+</body>
+</html>
+
