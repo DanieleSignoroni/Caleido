@@ -317,13 +317,13 @@ public class YModificaScontiProvvigioniRigheVendita extends BusinessObjectAdapte
 				riga.setScontoArticolo1(getScontoArticolo1());
 				riga.setScontoArticolo2(getScontoArticolo2());
 				riga.setMaggiorazione(getMaggiorazione());
-				riga.setAlfanumRiservatoUtente1(getAlfanumRiservatoUtente1());
-				riga.setFlagRiservatoUtente1(getFlagRiservatoUtente1());
 			}
 			riga.setAgente(getAgente());
 			riga.setSubagente(getSubagente());
 			riga.setProvvigione2Agente(getProvvigione2Agente());
 			riga.setProvvigione2Subagente(getProvvigione2Subagente());
+			riga.setAlfanumRiservatoUtente1(getAlfanumRiservatoUtente1());
+			riga.setFlagRiservatoUtente1(getFlagRiservatoUtente1());
 
 			rc = riga.save();
 

@@ -8,8 +8,6 @@ import com.thera.thermfw.ad.ClassADCollection;
 import com.thera.thermfw.web.ServletEnvironment;
 import com.thera.thermfw.web.servlet.FormActionAdapter;
 
-import it.caleido.thip.vendite.offerteCliente.web.YOffertaClienteRigaPrmGridActionAdapter;
-
 /**
  * <h1>Softre Solutions</h1>
  * <br>
@@ -26,7 +24,7 @@ public class YModificaScontiProvvigioniRigheVenditaFormActionAdapter extends For
 	@Override
 	protected void otherActions(ClassADCollection cadc, ServletEnvironment se) throws ServletException, IOException {
 		String action = getStringParameter(se.getRequest(), ACTION);
-		if(action.equals(YOffertaClienteRigaPrmGridActionAdapter.MODIFICA_MASSIVA_SCONTI_PROVVIGIONI)) {
+		if(action.equals(SAVE_AND_CLOSE)) {
 			save(cadc, se);
 		}else {
 			super.otherActions(cadc, se);

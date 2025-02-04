@@ -9,6 +9,7 @@ import com.thera.thermfw.common.ErrorMessage;
 import com.thera.thermfw.web.ServletEnvironment;
 import com.thera.thermfw.web.WebToolBar;
 import com.thera.thermfw.web.WebToolBarButton;
+import com.thera.thermfw.web.servlet.GridActionAdapter;
 
 import it.caleido.thip.vendite.generaleVE.YModificaScontiProvvigioniRigheVendita;
 import it.thera.thip.vendite.offerteCliente.web.OffertaClienteRigaPrmGridActionAdapter;
@@ -29,6 +30,9 @@ public class YOffertaClienteRigaPrmGridActionAdapter extends OffertaClienteRigaP
 	public static final String MODIFICA_MASSIVA_SCONTI_PROVVIGIONI = "MOD_MASS_SCH_PROVV";
 	public static final String MODIFICA_MASSIVA_SCONTI_PROVVIGIONI_IMG = "it/caleido/thip/vendite/generaleVE/img/TrasfCostiComm.svg";
 	public static final String MODIFICA_MASSIVA_SCONTI_PROVVIGIONI_RES = "it.caleido.thip.vendite.generaleVE.resources.YModificaScontiProvvigioniRigheVendita";
+	
+	public static final String MODIFICA_CONFIGURAZIONE = "MODIFICA_CONFIGURAZIONE";
+	public static final String MODIFICA_CONFIGURAZIONE_IMG = "com/thera/thermfw/util/images/sql_export.svg";
 
 	@Override
 	public void modifyToolBar(WebToolBar toolBar) {
@@ -37,6 +41,12 @@ public class YOffertaClienteRigaPrmGridActionAdapter extends OffertaClienteRigaP
 				MODIFICA_MASSIVA_SCONTI_PROVVIGIONI,
 				MODIFICA_MASSIVA_SCONTI_PROVVIGIONI_IMG, MODIFICA_MASSIVA_SCONTI_PROVVIGIONI, "multipleSelSingleWindow", false);
 		toolBar.addButton(sbloccaArticolo);
+		WebToolBarButton modificaConfigurazione = new WebToolBarButton(MODIFICA_CONFIGURAZIONE, "action_submit", "new", "no",
+				MODIFICA_MASSIVA_SCONTI_PROVVIGIONI_RES,
+				MODIFICA_CONFIGURAZIONE,
+				MODIFICA_CONFIGURAZIONE_IMG, MODIFICA_CONFIGURAZIONE, "single", false);
+		toolBar.addButton(modificaConfigurazione);
+		
 		super.modifyToolBar(toolBar);
 	}
 
@@ -45,9 +55,17 @@ public class YOffertaClienteRigaPrmGridActionAdapter extends OffertaClienteRigaP
 		String action = se.getRequest().getParameter(ACTION) != null ? se.getRequest().getParameter(ACTION) : "";
 		if (action.equals(MODIFICA_MASSIVA_SCONTI_PROVVIGIONI)) {
 			modificaMassivaSocntiProvvigioni(se);
+		}else if(action.equals(MODIFICA_CONFIGURAZIONE)) {
+			modificaConfigurazione(cadc,se);
 		}else {
 			super.otherActions(cadc, se);
 		}
+	}
+
+	protected void modificaConfigurazione(ClassADCollection cadc, ServletEnvironment se) throws ServletException, IOException {
+		String url = "it/caleido/thip/vendite/generaleVE/YModificaConfigurazioneRigaVendita.jsp?Mode=NEW";
+		url += "&InitialActionAdapter="+GridActionAdapter.class.getName();
+		se.sendRequest(getServletContext(), url, false);
 	}
 
 	protected void modificaMassivaSocntiProvvigioni(ServletEnvironment se) throws ServletException, IOException {
@@ -55,7 +73,9 @@ public class YOffertaClienteRigaPrmGridActionAdapter extends OffertaClienteRigaP
 		boolean isAutorizzato = YModificaScontiProvvigioniRigheVendita.isAutorizzatoTask(className, MODIFICA_MASSIVA_SCONTI_PROVVIGIONI);
 		isAutorizzato = true;
 		if(isAutorizzato) {
-			se.sendRequest(getServletContext(), "it/caleido/thip/vendite/generaleVE/YModificaScontiProvvigioniRigheVendita.jsp", false);
+			String url = "it/caleido/thip/vendite/generaleVE/YModificaScontiProvvigioniRigheVendita.jsp?Mode=NEW";
+			url += "&InitialActionAdapter="+GridActionAdapter.class.getName();
+			se.sendRequest(getServletContext(), url, false);
 		}else {
 			se.addErrorMessage(new ErrorMessage("BAS0000078",""));
 		}
