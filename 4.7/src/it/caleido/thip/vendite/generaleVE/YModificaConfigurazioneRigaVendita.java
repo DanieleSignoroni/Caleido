@@ -258,6 +258,8 @@ public class YModificaConfigurazioneRigaVendita extends BusinessObjectAdapter im
 			}
 			boDC.setAutoCommit(false);
 			rc = boDC.save();
+			if(rc == BODataCollector.OK)
+				rc = 1;
 			warnigns.addAll(boDC.getErrorList().getErrors());
 		}
 		return rc;

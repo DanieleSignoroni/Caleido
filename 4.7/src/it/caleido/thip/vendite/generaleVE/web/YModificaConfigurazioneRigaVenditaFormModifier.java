@@ -95,6 +95,8 @@ public class YModificaConfigurazioneRigaVenditaFormModifier extends DocumentoAbs
 		out.println("<script language='JavaScript1.2'>");
 		YModificaConfigurazioneRigaVendita bo = (YModificaConfigurazioneRigaVendita) getBODataCollector().getBo();
 		Configurazione configurazione = bo.getConfigurazione();
+		if(configurazione == null)
+			return;
 		int count = 1;
 		out.println("document.getElementById('IdSchemaCfg').value = '"+configurazione.getIdSchemaCfg()+"';");
 		for (Iterator sezioni = configurazione.getSchemaCfg().getSezioni().iterator(); sezioni.hasNext();) {

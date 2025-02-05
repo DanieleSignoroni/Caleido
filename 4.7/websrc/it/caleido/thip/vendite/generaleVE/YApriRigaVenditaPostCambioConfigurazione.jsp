@@ -14,6 +14,7 @@ try {
     	String jsp = d.getNavigatore().getJspRigaPrmCompleta();
     	String url = se.getWebApplicationPath() + "/" + jsp + "?Mode=UPDATE&Key=" + com.thera.thermfw.web.URLUtils.get().encode((String)request.getAttribute("ChiaveSelezionato")) + "&InitialActionAdapter=" + GridActionAdapter.class.getName();
     	url += "&" + DocumentoDatiSessione.CHIAVE_DATI_SESSIONE + "=" + d.getChiaveDatiSessione();
+    	url += "&" + "thClassName" + "=" + request.getParameter(GridActionAdapter.CLASS_NAME);
     	%>
     	<script>
     		parent.window.location = '<%=url%>';

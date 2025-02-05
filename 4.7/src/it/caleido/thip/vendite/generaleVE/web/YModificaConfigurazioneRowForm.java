@@ -82,15 +82,17 @@ public class YModificaConfigurazioneRowForm extends WebElement implements WebGen
 			YModificaConfigurazioneRigaVendita bo = (YModificaConfigurazioneRigaVendita) getOwnerForm()
 					.getBODataCollector().getBo();
 			Configurazione configurazione = bo.getConfigurazione();
-			for (Iterator sezioni = configurazione.getSchemaCfg().getSezioni().iterator(); sezioni.hasNext();) {
-				SezioneConfigurazione sezione = (SezioneConfigurazione) sezioni.next();
-				out.println("<tr>");
-				out.println("<td>");
-				out.println("<table name='sezione' id='"+sezione.getIdSezioneCfg()+"'>");
-				writeSezione(out, sezione);
-				out.println("</table>");
-				out.println("</td>");
-				out.println("</tr>");
+			if(configurazione != null) {
+				for (Iterator sezioni = configurazione.getSchemaCfg().getSezioni().iterator(); sezioni.hasNext();) {
+					SezioneConfigurazione sezione = (SezioneConfigurazione) sezioni.next();
+					out.println("<tr>");
+					out.println("<td>");
+					out.println("<table name='sezione' id='"+sezione.getIdSezioneCfg()+"'>");
+					writeSezione(out, sezione);
+					out.println("</table>");
+					out.println("</td>");
+					out.println("</tr>");
+				}
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -132,18 +134,53 @@ public class YModificaConfigurazioneRowForm extends WebElement implements WebGen
 
 	public void writeJavaScript(JspWriter out, VariabileSchemaCfg variabileCfg) throws java.io.IOException {
 		out.println("<script>");
+		//Fix 11994 inizio
 		if (variabileCfg.getObbligVariabile())
 			out.println("eval(\"document.forms[0].\" + idFromName[\"" + getIdVarCfgXRowForm(variabileCfg) + ".Descrizione.Descrizione\"]).style.background = mCo;");
 		else //Fix 15062
 			out.println("eval(\"document.forms[0].\" + idFromName[\"" + getIdVarCfgXRowForm(variabileCfg) + ".Descrizione.Descrizione\"]).style.background = sCo;"); //Fix 15062
+		if(getOwnerForm().getMode() == WebForm.SHOW ||
+				variabileCfg.getEsponiInDialogo() == VariabileSchemaCfg.ESP_IN_DIALOGO_SI_SOLO_LETTURA || variabileCfg.getIdVariabileConfig().equals("FASCIA")) {//Fix 12013 //Fix 12084
+			//out.println("eval('document.forms[0].' + idFromName['"+getIdVarCfgXRowForm(variabileCfg)+".Descrizione.Descrizione']).readonly = true;");//30331
+			//out.println("eval('document.forms[0].' + idFromName['"+getIdVarCfgXRowForm(variabileCfg)+".Descrizione.Descrizione']).readonly = false;");//30331//33417
+			out.println("eval('document.forms[0].' + idFromName['"+getIdVarCfgXRowForm(variabileCfg)+".Descrizione.Descrizione']).readOnly = true;");//30331 //33417
+			out.println("eval('document.forms[0].' + idFromName['"+getIdVarCfgXRowForm(variabileCfg)+".Descrizione.Descrizione']).style.background = bCo;"); //Fix 12084 //Fix 12139
+			out.println("document.forms[0].th" + getIdVarCfgXRowForm(variabileCfg) + "SearchBut.disabled = true;");
+			out.println("document.forms[0].th" + getIdVarCfgXRowForm(variabileCfg) + "ImmagineBut.disabled = true;");//Fix 34759
+			//Fix 12013 inizio
+			out.println("  var img = eval('document.forms[0].th" + getIdVarCfgXRowForm(variabileCfg) + "SearchButImg');");
+			out.println("  img.src = \"it/thera/thip/datiTecnici/configuratore/images/ValoriSearchWinDis.gif\";");
+			//Fix 12013 fine
+			out.println("document.forms[0].Valore_"+getIdVarCfgXRowForm(variabileCfg)+".readOnly = true;");//30331//33417
+			//out.println("document.forms[0].Valore_"+getIdVarCfgXRowForm(variabileCfg)+".readonly = false;");//30331//33417
+			out.println("document.forms[0].Valore_"+getIdVarCfgXRowForm(variabileCfg)+".style.background = bCo;"); //Fix 12084 //Fix 12139
+			if(variabileCfg.getNaturaVariabileCfg() == VariabileSchemaCfg.INTERNA){
+				out.println("document.forms[0].thCatalogo" + getIdVarCfgXRowForm(variabileCfg) + "SearchBut.disabled = true;");
+				//out.println("document.forms[0].thCatalogo" + getIdVarCfgXRowForm(variabileCfg) + "EditBut.disabled = true;");
+				//out.println("eval('document.forms[0].' + idFromName['Catalogo" + getIdVarCfgXRowForm(variabileCfg) + ".DescrizioneEstesa']).readonly = true;");//30331
+				//out.println("eval('document.forms[0].' + idFromName['Catalogo" + getIdVarCfgXRowForm(variabileCfg) + ".DescrizioneEstesa']).readonly = false;");//30331//33417
+				out.println("eval('document.forms[0].' + idFromName['Catalogo" + getIdVarCfgXRowForm(variabileCfg) + ".DescrizioneEstesa']).readOnly = true;");//30331//33417
+			}
+			else{ //Esterna
+				out.println("document.forms[0].thEsterna" + getIdVarCfgXRowForm(variabileCfg) + "SearchBut.disabled = true;");
+				//out.println("document.forms[0].thEsterna" + getIdVarCfgXRowForm(variabileCfg) + "EditBut.disabled = true;");
+				//out.println("eval('document.forms[0].' + idFromName['Esterna" + getIdVarCfgXRowForm(variabileCfg) + ".Descrizione']).readonly = true;");//30331
+				//out.println("eval('document.forms[0].' + idFromName['Esterna" + getIdVarCfgXRowForm(variabileCfg) + ".Descrizione']).readonly = false;");//30331//33417
+				out.println("eval('document.forms[0].' + idFromName['Esterna" + getIdVarCfgXRowForm(variabileCfg) + ".Descrizione']).readOnly = true;");//30331 //33417
+			}
+		}
+		//Fix 11994 fine
+		//Fix 15062 inizio
 		if(variabileCfg.getNaturaVariabileCfg() == VariabileSchemaCfg.ESTERNA){
 			out.println("  var estF1 = eval('document.forms[0].' + idFromName['Valore_" + getIdVarCfgXRowForm(variabileCfg) + "']);");
 			out.println("  defineEvent(estF1, eventMOUSEDOWN , function() {});");
 			out.println("  defineEvent(estF1, eventCLICK , function() {});");
+			//30331 inizio
 			out.println("  var estVar = eval('document.forms[0].' + idFromName['" + getIdVarCfgXRowForm(variabileCfg) + ".Descrizione.Descrizione']);");
 			out.println("  estVar.value = '" +  ((ValoreVariabileCfg)(variabileCfg.getValori().get(0))).getDescrizione().getDescrizione()  + "';");
 			out.println("  var estSeq = eval('document.forms[0].' + idFromName['SequenzaValore_" + getIdVarCfgXRowForm(variabileCfg) + "']);");
 			out.println("  estSeq.value = '" +  ((ValoreVariabileCfg)(variabileCfg.getValori().get(0))).getSequenzaValore()  + "';");
+			//30331 fine
 			if (variabileCfg.getObbligVariabile())
 				out.println("  estF1.style.background = mCo;");
 			else
@@ -153,6 +190,7 @@ public class YModificaConfigurazioneRowForm extends WebElement implements WebGen
 			out.println("  defineEvent(estF2, eventCLICK , function() {});");
 			out.println("  estF2.style.background = sCo;");
 		}
+		//Fix 15062 fine
 		out.println("</script>");
 	}
 

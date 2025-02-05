@@ -1,5 +1,9 @@
 function YModificaConfRigheVenOL() {
-
+	var idEsternoConfig = document.getElementById('IdEsternoConfig').value;
+	if(idEsternoConfig == null || idEsternoConfig == undefined || idEsternoConfig === ''){
+		window.alert('Non e possibile cambiare la configurazione di una riga che non ha configurazione');
+		setTimeout(window.close(),2000);
+	}
 }
 
 function conferma() {
@@ -277,7 +281,7 @@ function ricercaLight(field) {
 		//var idVar = curComp.idVariabileCfg;
 		var idVar = curComp.getAttribute("idVariabileCfg"); //Fix 12139
 		var varKey = idAzienda + fsep + idSchema + fsep + idVar;
-		var sint = buildSintesiConfig();
+		var sint = buildSintesiConfigForSave(findClosestSezioneTable(curComp));
 		var idSez = trovaSezione(curComp);
 		var idConfig = eval('document.forms[0].' + idFromName['IdConfigurazione']).value; //Fix 13478
 		var idArt = eval('document.forms[0].' + idFromName['IdArticolo']).value; //Fix 15697
@@ -295,6 +299,19 @@ function ricercaLight(field) {
 
 }
 
+function findClosestSezioneTable(element) {
+    let current = element;
+
+    while (current) {
+        if (current.tagName === 'TABLE' && current.getAttribute("name") === "sezione") {
+            return current; // Found the table with the required name
+        }
+        current = current.previousElementSibling || current.parentElement;
+    }
+
+    return null; // No matching table found
+}
+
 var oldDoSearch = doSearch;
 doSearch = function(rightFieldName, url, extraRelatedClassAD, specificDOList) {
 	if (rightFieldName.indexOf("Var") == 0) {
@@ -306,7 +323,7 @@ doSearch = function(rightFieldName, url, extraRelatedClassAD, specificDOList) {
 		var curComp = eval("document.forms[0]." + idFromName[rightFieldName]);
 		var idVar = curComp.getAttribute("idVariabileCfg"); //Fix 12139
 		var varKey = idAzienda + fsep + idSchema + fsep + idVar;
-		var sint = buildSintesiConfig();
+		var sint = buildSintesiConfigForSave(findClosestSezioneTable(curComp));
 		var idSez = trovaSezione(curComp);
 		var idConfig = eval('document.forms[0].' + idFromName['IdConfigurazione']).value; //Fix 13478
 		var idArt = eval('document.forms[0].' + idFromName['IdArticolo']).value; //Fix 15697
@@ -333,45 +350,6 @@ function trovaSezione(startElement) {
 	return sezione;
 }
 
-function buildSintesiConfig() {//Fix 11994
-	var first = true;
-	var aStringa = '';
-	var idValore = '';
-	var idVariabile = '';
-	var value = '';
-	var idVarCfg = '';//Fix 11994
-	var inputs = document.forms[0].getElementsByTagName("input");
-	for (var i = 0; i < inputs.length; i++) {
-		var id = inputs[i].getAttribute("id");
-		if (id.indexOf('SequenzaValore_') == 0) {
-			idVariabile = id.substring(id.indexOf('_') + 1);
-			var seqValVar = "document.forms[0].SequenzaValore_" + idVariabile;
-			idValore = eval(seqValVar).value;
-			//idVarCfg  = eval(seqValVar).idVariabileCfg;//Fix 11994
-			idVarCfg = eval(seqValVar).getAttribute("idVariabileCfg");//Fix 12139
-		}
-		if (idValore != '') {
-			if (id.indexOf('Valore_') == 0) {
-				//Fix 12738 inizio
-				var field = eval("document.forms[0].Valore_" + idVariabile);
-				value = field.value;
-				value = field.typeNameJS.unformat(value);
-				//Fix 12738 fine
-				if (value != '') {
-					if (first == true) {
-						aStringa += idVarCfg + fsep + value + fsep + idValore;//Fix 11994
-						first = false;
-					}
-					else {
-						aStringa += fsep + idVarCfg + fsep + value + fsep + idValore;//Fix 11994
-					}
-				}
-				idValore = '';
-			}
-		}
-	}
-	return aStringa;
-}
 
 function showSearchWin(idVariabile, height) { //Fix 12013
 	//Fix 12013 inizio

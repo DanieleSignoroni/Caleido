@@ -28,6 +28,7 @@ public class YModificaConfigurazioneRigaVenditaSave extends Save {
 		if(se.isErrorListEmpity()) {
 			YModificaConfigurazioneRigaVendita bo = (YModificaConfigurazioneRigaVendita) boDC.getBo();
 			se.getRequest().setAttribute("ChiaveSelezionato", bo.getChiaviSelezionati());
+			se.getRequest().setAttribute(CLASS_NAME, bo.getClassName());
 			String url = "/it/caleido/thip/vendite/generaleVE/YApriRigaVenditaPostCambioConfigurazione.jsp";
 			se.sendRequest(getServletContext(), url, false);
 		}else {
