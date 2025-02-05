@@ -13,12 +13,12 @@ import com.thera.thermfw.common.ErrorMessage;
 import com.thera.thermfw.persist.KeyHelper;
 import com.thera.thermfw.persist.PersistentObject;
 import com.thera.thermfw.web.WebElement;
-import com.thera.thermfw.web.WebFormModifier;
 import com.thera.thermfw.web.servlet.GridActionAdapter;
 
 import it.caleido.thip.vendite.generaleVE.YModificaConfigurazioneRigaVendita;
 import it.thera.thip.base.catalogo.CatalEsterno;
 import it.thera.thip.base.comuniVenAcq.DocumentoOrdineRiga;
+import it.thera.thip.base.documenti.web.DocumentoAbsFormModifier;
 import it.thera.thip.base.profilo.UtenteAzienda;
 import it.thera.thip.cs.ColonneFiltri;
 import it.thera.thip.cs.DescrizioneInLingua;
@@ -37,7 +37,7 @@ import it.thera.thip.datiTecnici.configuratore.VariabileSchemaCfg;
  * <p></p>
  */
 
-public class YModificaConfigurazioneRigaVenditaFormModifier extends WebFormModifier {
+public class YModificaConfigurazioneRigaVenditaFormModifier extends DocumentoAbsFormModifier {
 
 	@SuppressWarnings("rawtypes")
 	protected List iErrsFromMacroEntrata = null;
@@ -45,6 +45,7 @@ public class YModificaConfigurazioneRigaVenditaFormModifier extends WebFormModif
 	@SuppressWarnings("rawtypes")
 	@Override
 	public void writeHeadElements(JspWriter out) throws IOException {
+		super.writeHeadElements(out);
 		YModificaConfigurazioneRigaVendita bo = (YModificaConfigurazioneRigaVendita) getBODataCollector().getBo();
 		String className = getServletEnvironment().getRequest().getParameter(GridActionAdapter.CLASS_NAME);
 		String[] objectKeys = getServletEnvironment().getRequest().getParameterValues(GridActionAdapter.OBJECT_KEY);
@@ -72,22 +73,23 @@ public class YModificaConfigurazioneRigaVenditaFormModifier extends WebFormModif
 
 	@Override
 	public void writeBodyStartElements(JspWriter out) throws IOException {
-
+		super.writeBodyStartElements(out);
 	}
 
 	@Override
 	public void writeFormStartElements(JspWriter out) throws IOException {
-
+		super.writeFormStartElements(out);
 	}
 
 	@Override
 	public void writeFormEndElements(JspWriter out) throws IOException {
-
+		super.writeFormEndElements(out);
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public void writeBodyEndElements(JspWriter out) throws IOException {
+		super.writeBodyEndElements(out);
 		out.println("<script language='JavaScript1.2'>");
 		YModificaConfigurazioneRigaVendita bo = (YModificaConfigurazioneRigaVendita) getBODataCollector().getBo();
 		Configurazione configurazione = bo.getConfigurazione();
@@ -214,6 +216,11 @@ public class YModificaConfigurazioneRigaVenditaFormModifier extends WebFormModif
 			ex.printStackTrace(Trace.excStream);
 		}
 		return null;
+	}
+
+	@Override
+	public int getTipoJSP() {
+		return 0;
 	}
 
 }

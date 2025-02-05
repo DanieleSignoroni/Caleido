@@ -2,6 +2,73 @@ function YModificaConfRigheVenOL() {
 
 }
 
+function conferma() {
+	var className = document.forms[0].ClassName.value;
+	var conferma = window.confirm('Sei sicuro di voler confermare le modiifche?');
+	if (conferma) {
+		
+		//Prendo tutte le tabelle che hanno come name 'sezione'
+		const sezioneElements = document.getElementsByName('sezione');
+		var sintesi = '';
+		//Itero queste tabelle
+		for (let i = 0; i < sezioneElements.length; i++) {
+			let element = sezioneElements[i];
+			
+			//Costriuisco la sintesi della singola sezione
+			//La sistesi e' composta da un valore del tipo ID_VARIABILE+KEY_SEPARATOR+VALORE_VARIABILE
+			let sintesiSezione = buildSintesiConfigForSave(element);
+			
+			sintesi += sintesiSezione;
+			
+			//Se ne ho ancora uno dopo allora aggiungo un'altro separatore con il quale poi splittero' le varie sezioni
+			if(i < sezioneElements.length){
+				sintesi += sezSepForSave;
+			}
+		}
+		
+		eval("document.forms[0].SintesiConfigurazione").value = sintesi;
+
+		runActionDirect('SAVE', 'action_submit', className, '', 'errorsFrame', 'no');
+	}
+}
+
+function buildSintesiConfigForSave(table) {
+	var first = true;
+	var aStringa = '';
+	var idValore = '';
+	var idVariabile = '';
+	var value = '';
+	var idVarCfg = '';
+	var inputs = table.getElementsByTagName("input");
+	for (var i = 0; i < inputs.length; i++) {
+		var id = inputs[i].getAttribute("id");
+		if (id.indexOf('SequenzaValore_') == 0) {
+			idVariabile = id.substring(id.indexOf('_') + 1);
+			var seqValVar = "document.forms[0].SequenzaValore_" + idVariabile;
+			idValore = eval(seqValVar).value;
+			idVarCfg = eval(seqValVar).getAttribute("idVariabileCfg");
+		}
+		if (idValore != '') {
+			if (id.indexOf('Valore_') == 0) {
+				var field = eval("document.forms[0].Valore_" + idVariabile);
+				value = field.value;
+				value = field.typeNameJS.unformat(value);
+				if (value != '') {
+					if (first == true) {
+						aStringa += idVarCfg + fsep + value + fsep + idValore;
+						first = false;
+					}
+					else {
+						aStringa += fsep + idVarCfg + fsep + value + fsep + idValore;
+					}
+				}
+				idValore = '';
+			}
+		}
+	}
+	return aStringa;
+}
+
 function openVariabile(idVariabile, idSezione, idSchemaCfg) {
 	var idAzienda = eval('document.forms[0].' + idFromName['IdAzienda']).value;
 	var schemaKey = idAzienda + fsep + idSchemaCfg;
@@ -243,7 +310,7 @@ doSearch = function(rightFieldName, url, extraRelatedClassAD, specificDOList) {
 		var idSez = trovaSezione(curComp);
 		var idConfig = eval('document.forms[0].' + idFromName['IdConfigurazione']).value; //Fix 13478
 		var idArt = eval('document.forms[0].' + idFromName['IdArticolo']).value; //Fix 15697
-		var params = "Var=" + URLEncode(varKey) + "&Sint=" + URLEncode(sint) + "&Sez=" + URLEncode(idSez) + "&IdConfig=" + URLEncode(idConfig) + "&IdArt=" + URLEncode(idArt); //Fix 12442 //Fix 13478 //Fix 15697
+		var params = "Var=" + URLEncode(varKey) + "&Sint=" + URLEncode(sint) + "&Sez=" + URLEncode(idSez) + "&IdConfig=" + URLEncode(idConfig) + "&IdArt=" + URLEncode(idArt);
 		params = params + "&CurVal=";//+ URLEncode(curVal);//30331//30682
 		tmpX = lightSearchLeftPosition(curComp);//window.event.clientX+document.body.scrollLeft;
 		tmpY = lightSearchTopPosition(curComp) - lightSearchScrollTop(curComp) + 20; //Fix 31770

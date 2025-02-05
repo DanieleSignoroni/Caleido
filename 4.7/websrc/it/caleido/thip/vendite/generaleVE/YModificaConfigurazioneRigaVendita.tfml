@@ -20,6 +20,7 @@
     <textinput name="ClassName" classAD="ClassName"/>
 	<textinput name="IdConfigurazione" classAD="IdConfigurazione"/>
     <textinput name="ChiaviSelezionati" classAD="ChiaviSelezionati"/>
+	<textinput name="SintesiConfigurazione" classAD="SintesiConfigurazione"/>
 	<multisearchform classRD="Configurazione" name="Configurazione"/>
   </form>
 </tfml>

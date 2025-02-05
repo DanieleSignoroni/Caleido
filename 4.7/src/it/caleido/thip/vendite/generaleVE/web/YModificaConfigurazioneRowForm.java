@@ -22,7 +22,6 @@ import com.thera.thermfw.collector.BODataCollector;
 import com.thera.thermfw.collector.BaseComponentManager;
 import com.thera.thermfw.collector.EnhBOComponentManager;
 import com.thera.thermfw.persist.Factory;
-import com.thera.thermfw.persist.PersistentObject;
 import com.thera.thermfw.type.EnumerationType;
 import com.thera.thermfw.type.NumberType;
 import com.thera.thermfw.type.Type;
@@ -76,7 +75,6 @@ public class YModificaConfigurazioneRowForm extends WebElement implements WebGen
 	@SuppressWarnings("rawtypes")
 	@Override
 	public void write(JspWriter out) throws IOException {
-		out.println("var fsep = " + getQuotedString(PersistentObject.KEY_SEPARATOR) + ";");
 		try {
 			YModificaConfigurazioneRigaVendita bo = (YModificaConfigurazioneRigaVendita) getOwnerForm()
 					.getBODataCollector().getBo();
@@ -85,7 +83,7 @@ public class YModificaConfigurazioneRowForm extends WebElement implements WebGen
 				SezioneConfigurazione sezione = (SezioneConfigurazione) sezioni.next();
 				out.println("<tr>");
 				out.println("<td>");
-				out.println("<table id='"+sezione.getIdSezioneCfg()+"'>");
+				out.println("<table name='sezione' id='"+sezione.getIdSezioneCfg()+"'>");
 				writeSezione(out, sezione);
 				out.println("</table>");
 				out.println("</td>");

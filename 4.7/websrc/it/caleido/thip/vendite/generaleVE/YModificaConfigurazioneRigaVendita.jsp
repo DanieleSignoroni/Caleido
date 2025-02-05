@@ -1,5 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
                       "file:///K:/Thip/5.0.0/websrcsvil/dtd/xhtml1-transitional.dtd">
+<%@page import="it.thera.thip.cs.ColonneFiltri"%>
 <html>
 <!-- WIZGEN Therm 2.0.0 as Form - multiBrowserGen = true -->
 <%=WebGenerator.writeRuntimeInfo()%>
@@ -71,6 +72,10 @@
            // a completamento blocco di codice YYY a fine body con catch e gestione errori 
 %> 
 </head>
+<script language="JavaScript1.2">
+var fsep = '<%=PersistentObject.KEY_SEPARATOR%>';
+var sezSepForSave =  '<%=ColonneFiltri.SEP%>';
+</script>
 <body onbeforeunload="<%=YModificaConfRigheVenForm.getBodyOnBeforeUnload()%>" onload="<%=YModificaConfRigheVenForm.getBodyOnLoad()%>" onunload="<%=YModificaConfRigheVenForm.getBodyOnUnload()%>" style="margin: 0px; overflow: hidden;"><%
    YModificaConfRigheVenForm.writeBodyStartElements(out); 
 %> 
@@ -135,6 +140,17 @@
 			</tr>
 			<tr>
 				<td><% 
+  WebTextInput YModificaConfRigheVenSintesiConfigurazione =  
+     new com.thera.thermfw.web.WebTextInput("YModificaConfRigheVen", "SintesiConfigurazione"); 
+  YModificaConfRigheVenSintesiConfigurazione.setParent(YModificaConfRigheVenForm); 
+%>
+<input class="<%=YModificaConfRigheVenSintesiConfigurazione.getClassType()%>" id="<%=YModificaConfRigheVenSintesiConfigurazione.getId()%>" maxlength="<%=YModificaConfRigheVenSintesiConfigurazione.getMaxLength()%>" name="<%=YModificaConfRigheVenSintesiConfigurazione.getName()%>" size="<%=YModificaConfRigheVenSintesiConfigurazione.getSize()%>" type="hidden"><% 
+  YModificaConfRigheVenSintesiConfigurazione.write(out); 
+%>
+</td>
+			</tr>
+			<tr>
+				<td><% 
   WebTextInput YModificaConfRigheVenChiaviSelezionati =  
      new com.thera.thermfw.web.WebTextInput("YModificaConfRigheVen", "ChiaviSelezionati"); 
   YModificaConfRigheVenChiaviSelezionati.setParent(YModificaConfRigheVenForm); 
@@ -144,21 +160,30 @@
 %>
 </td>
 			</tr>
-			<tr>
+			<tr style="margin-top:5px">
 				<td>
 					<table>
 						<tr>
-							<td><%{  WebLabelCompound label = new com.thera.thermfw.web.WebLabelCompound(null, null, "YModificaConfRigheVen", "IdEsternoConfig", null); 
+								<td><%{  WebLabelCompound label = new com.thera.thermfw.web.WebLabelCompound(null, null, "YModificaConfRigheVen", "IdEsternoConfig", null); 
    label.setParent(YModificaConfRigheVenForm); 
 %><label class="<%=label.getClassType()%>" for="Configurazione"><%label.write(out);%></label><%}%></td>
-							<td><% 
+								<td><% 
   WebMultiSearchForm YModificaConfRigheVenConfigurazione =  
      new com.thera.thermfw.web.WebMultiSearchForm("YModificaConfRigheVen", "Configurazione", false, false, true, 1, null, null); 
   YModificaConfRigheVenConfigurazione.setParent(YModificaConfRigheVenForm); 
   YModificaConfRigheVenConfigurazione.write(out); 
 %>
 <!--<span class="multisearchform" id="Configurazione"></span>--></td>
-						</tr>
+								<td><button id="bottoneConferma" name="bottoneConferma" onclick="conferma()" style="width: 125px; display: inline; margin-top: 2.5rem; margin-left: 1rem" type="button">Conferma</button></td>
+							</tr>
+					</table>
+				</td>
+				
+			</tr>
+		
+			<tr>
+				<td>
+					<table>
 						<tr id>
 							<td>
 								<table>
