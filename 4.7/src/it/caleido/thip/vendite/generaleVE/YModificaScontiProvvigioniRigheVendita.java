@@ -33,11 +33,13 @@ import it.thera.thip.vendite.ordineVE.OrdineVenditaRigaPrm;
 import it.thera.thip.vendite.ordineVE.OrdineVenditaRigaSec;
 
 /**
+ * Business object che risiede dietro la form 'it/caleido/thip/vendite/generaleVE/YModificaScontiProvvigioniRigheVendita.jsp'.<br></br>
+ * Permette a partire da una riga (Offerta,Ordine) di cambiare sconti,provvigioni e agenti delle righe primarie e secondarie.<br></br>
  * <h1>Softre Solutions</h1>
  * <br>
  * @author Daniele Signoroni 03/02/2025
  * <br><br>
- * <b>71XXX    DSSOF3    03/02/2025</b>
+ * <b>71811    DSSOF3    03/02/2025</b>
  * <p></p>
  */
 
@@ -284,7 +286,7 @@ public class YModificaScontiProvvigioniRigheVendita extends BusinessObjectAdapte
 			riga.setSubagente(getSubagente());
 			riga.setProvvigione2Agente(getProvvigione2Agente());
 			riga.setProvvigione2Subagente(getProvvigione2Subagente());
-			
+
 			rc = riga.save();
 
 		}else {

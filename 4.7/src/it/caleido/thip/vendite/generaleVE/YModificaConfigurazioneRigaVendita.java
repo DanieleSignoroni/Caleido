@@ -45,11 +45,15 @@ import it.thera.thip.vendite.offerteCliente.OffertaClienteRigaPrm;
 import it.thera.thip.vendite.ordineVE.OrdineVenditaRigaPrm;
 
 /**
+ * Business object che risiede dietro la form 'it/caleido/thip/vendite/generaleVE/YModificaConfigurazioneRigaVendita.jsp'.<br></br>
+ * Permette a partire da una riga (Offerta,Ordine) di cambiare la configurazione.<br></br>
+ * 
+ * Cambiare significa sceglierne tra una esistente o crearne una nuova.<br>
  * <h1>Softre Solutions</h1>
  * <br>
  * @author Daniele Signoroni 04/02/2025
  * <br><br>
- * <b>71XXX    DSSOF3    04/02/2025</b>
+ * <b>71811    DSSOF3    04/02/2025</b>
  * <p></p>
  */
 
@@ -215,13 +219,16 @@ public class YModificaConfigurazioneRigaVendita extends BusinessObjectAdapter im
 		int rc = 0;
 		Configurazione configurazione = getConfigurazione();
 		String sintesiConfigGUI = getSintesiConfigurazioneGUI();
+		//Non dovrebbe arrivare mai qui ma se le trovo uguali allora exc
 		if(sintesiConfigGUI.equals(configurazione.getSintesiConfig())) {
 			throw new ThipException("La nuvoa configurazione e' uguale a quella di partenza");
 		}
 		Configurazione destination = null;
 		try {
+			//Controllo se a db esiste gia' una configurazione fatta come quella in GUI
 			Configurazione existingConf = leggiConfigurazione(getIdAzienda(), getIdArticolo(), sintesiConfigGUI);
 			if(existingConf == null) {
+				//Se non esiste la creo, copiando quella di partenza e settandogli la nuova stringa sintesi
 				destination = (Configurazione) Factory.createObject(Configurazione.class);
 				try {
 					destination.setEqual(getConfigurazione());
@@ -232,11 +239,13 @@ public class YModificaConfigurazioneRigaVendita extends BusinessObjectAdapter im
 				destination.setSintesiConfig(sintesiConfigGUI);
 				rc = destination.save();
 			}else {
+				//Se esiste setto quella alla riga
 				destination = existingConf;
 			}
 		} catch (SQLException e) {
 			e.printStackTrace(Trace.excStream);
 		}
+		//Qui poi prendo la riga selezionata e gli cambio la conf, facendo fare la save al boDC 
 		List<PersistentObject> righe = getRigheSelezionate();
 		for(PersistentObject riga : righe) {
 			BODataCollector boDC = createDataCollector(getClassName());
@@ -254,10 +263,18 @@ public class YModificaConfigurazioneRigaVendita extends BusinessObjectAdapter im
 		return rc;
 	}
 
+	/**
+	 * Ritorna la stringa di sintesi configurazione costruita nella form.<br>
+	 * @return
+	 */
 	protected String getSintesiConfigurazioneGUI() {
 		return buildSortedSintesiConfig(sinstesiConfigurazioneGuiMap());
 	}
 
+	/**
+	 * Ritorna la mappa con combinazione variabile/valore della configurazione costruita nella form.<br>
+	 * @return
+	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	protected HashMap sinstesiConfigurazioneGuiMap() {
 		Configurazione configurazione = getConfigurazione();

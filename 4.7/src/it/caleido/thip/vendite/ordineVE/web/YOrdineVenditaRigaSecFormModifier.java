@@ -11,7 +11,7 @@ import it.thera.thip.vendite.ordineVE.web.OrdineVenditaRigaSecFormModifier;
  * @author thomas.brescianini
  *
  *	70479	TBSOF3	16/03/2022	Aggiunto bottone per lo sblocco del tab Agenti nella riga secondaria dell'ordine di vendita
- *
+ *	71811	DSSOF3	05/02/2025	Rimozione bottone, sbloccato tab in automatico nel js
  */
 
 public class YOrdineVenditaRigaSecFormModifier extends OrdineVenditaRigaSecFormModifier{

@@ -15,7 +15,7 @@ import it.caleido.thip.vendite.generaleVE.YModificaConfigurazioneRigaVendita;
  * <br>
  * @author Daniele Signoroni 05/02/2025
  * <br><br>
- * <b>71XXX    DSSOF3    05/02/2025</b>
+ * <b>71811    DSSOF3    05/02/2025</b>
  * <p></p>
  */
 

@@ -11,7 +11,6 @@ import com.thera.thermfw.web.WebToolBar;
 import com.thera.thermfw.web.WebToolBarButton;
 import com.thera.thermfw.web.servlet.GridActionAdapter;
 
-import it.caleido.thip.vendite.generaleVE.YModificaScontiProvvigioniRigheVendita;
 import it.thera.thip.vendite.offerteCliente.web.OffertaClienteRigaPrmGridActionAdapter;
 
 /**
@@ -19,7 +18,7 @@ import it.thera.thip.vendite.offerteCliente.web.OffertaClienteRigaPrmGridActionA
  * <br>
  * @author Daniele Signoroni 03/02/2025
  * <br><br>
- * <b>71XXX    DSSOF3    03/02/2025</b>
+ * <b>71811    DSSOF3    03/02/2025</b>
  * <p></p>
  */
 
@@ -30,7 +29,7 @@ public class YOffertaClienteRigaPrmGridActionAdapter extends OffertaClienteRigaP
 	public static final String MODIFICA_MASSIVA_SCONTI_PROVVIGIONI = "MOD_MASS_SCH_PROVV";
 	public static final String MODIFICA_MASSIVA_SCONTI_PROVVIGIONI_IMG = "it/caleido/thip/vendite/generaleVE/img/TrasfCostiComm.svg";
 	public static final String MODIFICA_MASSIVA_SCONTI_PROVVIGIONI_RES = "it.caleido.thip.vendite.generaleVE.resources.YModificaScontiProvvigioniRigheVendita";
-	
+
 	public static final String MODIFICA_CONFIGURAZIONE = "MODIFICA_CONFIGURAZIONE";
 	public static final String MODIFICA_CONFIGURAZIONE_IMG = "com/thera/thermfw/util/images/sql_export.svg";
 
@@ -46,7 +45,7 @@ public class YOffertaClienteRigaPrmGridActionAdapter extends OffertaClienteRigaP
 				MODIFICA_CONFIGURAZIONE,
 				MODIFICA_CONFIGURAZIONE_IMG, MODIFICA_CONFIGURAZIONE, "single", false);
 		toolBar.addButton(modificaConfigurazione);
-		
+
 		super.modifyToolBar(toolBar);
 	}
 
@@ -54,7 +53,7 @@ public class YOffertaClienteRigaPrmGridActionAdapter extends OffertaClienteRigaP
 	protected void otherActions(ClassADCollection cadc, ServletEnvironment se) throws ServletException, IOException {
 		String action = se.getRequest().getParameter(ACTION) != null ? se.getRequest().getParameter(ACTION) : "";
 		if (action.equals(MODIFICA_MASSIVA_SCONTI_PROVVIGIONI)) {
-			modificaMassivaSocntiProvvigioni(se);
+			modificaMassivaScontiProvvigioni(se);
 		}else if(action.equals(MODIFICA_CONFIGURAZIONE)) {
 			modificaConfigurazione(cadc,se);
 		}else {
@@ -63,22 +62,31 @@ public class YOffertaClienteRigaPrmGridActionAdapter extends OffertaClienteRigaP
 	}
 
 	protected void modificaConfigurazione(ClassADCollection cadc, ServletEnvironment se) throws ServletException, IOException {
-		String url = "it/caleido/thip/vendite/generaleVE/YModificaConfigurazioneRigaVendita.jsp?Mode=NEW";
-		url += "&InitialActionAdapter="+GridActionAdapter.class.getName();
+		//String className = getStringParameter(se.getRequest(), CLASS_NAME);
+		boolean isAutorizzato = true;//YModificaScontiProvvigioniRigheVendita.isAutorizzatoTask(className, MODIFICA_CONFIGURAZIONE);
+		String url = null;
+		if(isAutorizzato) {
+			url = "it/caleido/thip/vendite/generaleVE/YModificaConfigurazioneRigaVendita.jsp?Mode=NEW";
+			url += "&InitialActionAdapter="+GridActionAdapter.class.getName();
+		}else {
+			se.addErrorMessage(new ErrorMessage("BAS0000020"));
+			url = "it/caleido/thip/base/utils/ShowErrorMessage.jsp";
+		}
 		se.sendRequest(getServletContext(), url, false);
 	}
 
-	protected void modificaMassivaSocntiProvvigioni(ServletEnvironment se) throws ServletException, IOException {
-		String className = getStringParameter(se.getRequest(), CLASS_NAME);
-		boolean isAutorizzato = YModificaScontiProvvigioniRigheVendita.isAutorizzatoTask(className, MODIFICA_MASSIVA_SCONTI_PROVVIGIONI);
-		isAutorizzato = true;
+	protected void modificaMassivaScontiProvvigioni(ServletEnvironment se) throws ServletException, IOException {
+		//String className = getStringParameter(se.getRequest(), CLASS_NAME);
+		boolean isAutorizzato = true;//YModificaScontiProvvigioniRigheVendita.isAutorizzatoTask(className, MODIFICA_MASSIVA_SCONTI_PROVVIGIONI);
+		String url = null;
 		if(isAutorizzato) {
-			String url = "it/caleido/thip/vendite/generaleVE/YModificaScontiProvvigioniRigheVendita.jsp?Mode=NEW";
+			url = "it/caleido/thip/vendite/generaleVE/YModificaScontiProvvigioniRigheVendita.jsp?Mode=NEW";
 			url += "&InitialActionAdapter="+GridActionAdapter.class.getName();
-			se.sendRequest(getServletContext(), url, false);
 		}else {
-			se.addErrorMessage(new ErrorMessage("BAS0000078",""));
+			se.addErrorMessage(new ErrorMessage("BAS0000020"));
+			url = "it/caleido/thip/base/utils/ShowErrorMessage.jsp";
 		}
+		se.sendRequest(getServletContext(), url, false);
 	}
-	
+
 }

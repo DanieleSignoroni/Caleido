@@ -44,11 +44,14 @@ import it.thera.thip.datiTecnici.configuratore.VariabileSchemaCfg;
 import it.thera.thip.datiTecnici.configuratore.web.WebMenuConfigurazione;
 
 /**
+ * Form interna copiata praticamente dallo standard che mi mostra tutte le sezioni di una configurazione con le sue variabili e i suoi valori.<br>
+ * A differenza dello standard questa mostra in 1 sola form tutte le sezioni con i valori.<br></br>
+ * Ogni sezione e' una <code>table</code>
  * <h1>Softre Solutions</h1> <br>
  * 
  * @author Daniele Signoroni 04/02/2025 <br>
  *         <br>
- *         <b>71XXX DSSOF3 04/02/2025</b>
+ *         <b>71811 DSSOF3 04/02/2025</b>
  *         <p>
  *         </p>
  */

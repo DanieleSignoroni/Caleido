@@ -29,11 +29,13 @@ import it.thera.thip.datiTecnici.configuratore.ValoreVariabileCfg;
 import it.thera.thip.datiTecnici.configuratore.VariabileSchemaCfg;
 
 /**
+ * Eredito da {@link DocumentoAbsFormModifier} per portarmi i dati in sessione fino all'ultima form.<br></br>
+ * 'it/caleido/thip/vendite/generaleVE/YApriRigaVenditaPostCambioConfigurazione.jsp'
  * <h1>Softre Solutions</h1>
  * <br>
  * @author Daniele Signoroni 04/02/2025
  * <br><br>
- * <b>71XXX    DSSOF3    04/02/2025</b>
+ * <b>71811    DSSOF3    04/02/2025</b>
  * <p></p>
  */
 

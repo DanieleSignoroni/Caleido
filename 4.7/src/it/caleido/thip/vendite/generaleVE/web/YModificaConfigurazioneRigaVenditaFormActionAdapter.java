@@ -13,7 +13,7 @@ import com.thera.thermfw.web.servlet.FormActionAdapter;
  * <br>
  * @author Daniele Signoroni 05/02/2025
  * <br><br>
- * <b>71XXX    DSSOF3    05/02/2025</b>
+ * <b>71811    DSSOF3    05/02/2025</b>
  * <p></p>
  */
 
@@ -23,7 +23,6 @@ public class YModificaConfigurazioneRigaVenditaFormActionAdapter extends FormAct
 
 	@Override
 	protected void save(ClassADCollection cadc, ServletEnvironment se) throws ServletException, IOException {
-		//super.save(cadc, se);
 		se.sendRequest(getServletContext(), se.getServletPath() + "it.caleido.thip.vendite.generaleVE.web.YModificaConfigurazioneRigaVenditaSave", false);
 	}
 }
