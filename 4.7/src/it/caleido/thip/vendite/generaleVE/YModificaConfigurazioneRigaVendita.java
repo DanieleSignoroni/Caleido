@@ -213,7 +213,6 @@ public class YModificaConfigurazioneRigaVendita extends BusinessObjectAdapter im
 		return errors;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public int save(boolean force) throws SQLException {
 		int rc = 0;
@@ -260,7 +259,7 @@ public class YModificaConfigurazioneRigaVendita extends BusinessObjectAdapter im
 			rc = boDC.save();
 			if(rc == BODataCollector.OK)
 				rc = 1;
-			warnigns.addAll(boDC.getErrorList().getErrors());
+			//warnigns.addAll(boDC.getErrorList().getErrors()); mi dava problemi poi nel mostrare la riga alla fine
 		}
 		return rc;
 	}

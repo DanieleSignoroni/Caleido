@@ -264,28 +264,44 @@ public class YModificaScontiProvvigioniRigheVendita extends BusinessObjectAdapte
 				while(iterRigheSec.hasNext()) {
 					OffertaClienteRigaSec rigaSec = (OffertaClienteRigaSec) iterRigheSec.next();
 					if(rigaSec.getTipoRiga() == TipoRiga.MERCE) {
-						rigaSec.setSconto(getSconto());
-						rigaSec.setScontoArticolo1(getScontoArticolo1());
-						rigaSec.setScontoArticolo2(getScontoArticolo2());
-						rigaSec.setMaggiorazione(getMaggiorazione());
-						rigaSec.setAgente(getAgente());
-						rigaSec.setSubagente(getSubagente());
-						rigaSec.setProvvigione2Agente(getProvvigione2Agente());
-						rigaSec.setProvvigione2Subagente(getProvvigione2Subagente());
+						if(getSconto() != null)
+							rigaSec.setSconto(getSconto());
+						if(getScontoArticolo1() != null)
+							rigaSec.setScontoArticolo1(getScontoArticolo1());
+						if(getScontoArticolo2() != null)
+							rigaSec.setScontoArticolo2(getScontoArticolo2());
+						if(getMaggiorazione() != null)
+							rigaSec.setMaggiorazione(getMaggiorazione());
+						if(getAgente() != null)
+							rigaSec.setAgente(getAgente());
+						if(getSubagente() != null)
+							rigaSec.setSubagente(getSubagente());
+						if(getProvvigione2Agente() != null)
+							rigaSec.setProvvigione2Agente(getProvvigione2Agente());
+						if(getProvvigione2Subagente() != null)
+							rigaSec.setProvvigione2Subagente(getProvvigione2Subagente());
 					}
 				}
 			}else {
-				riga.setSconto(getSconto());
-				riga.setScontoArticolo1(getScontoArticolo1());
-				riga.setScontoArticolo2(getScontoArticolo2());
-				riga.setMaggiorazione(getMaggiorazione());
+				if(getSconto() != null)
+					riga.setSconto(getSconto());
+				if(getScontoArticolo1() != null)
+					riga.setScontoArticolo1(getScontoArticolo1());
+				if(getScontoArticolo2() != null)
+					riga.setScontoArticolo2(getScontoArticolo2());
+				if(getMaggiorazione() != null)
+					riga.setMaggiorazione(getMaggiorazione());
 				//riga.setAlfanumRiservatoUtente1(getAlfanumRiservatoUtente1());
 				//riga.setFlagRiservatoUtente1(getFlagRiservatoUtente1());
 			}
-			riga.setAgente(getAgente());
-			riga.setSubagente(getSubagente());
-			riga.setProvvigione2Agente(getProvvigione2Agente());
-			riga.setProvvigione2Subagente(getProvvigione2Subagente());
+			if(getAgente() != null)
+				riga.setAgente(getAgente());
+			if(getSubagente() != null)
+				riga.setSubagente(getSubagente());
+			if(getProvvigione2Agente() != null)
+				riga.setProvvigione2Agente(getProvvigione2Agente());
+			if(getProvvigione2Subagente() != null)
+				riga.setProvvigione2Subagente(getProvvigione2Subagente());
 
 			rc = riga.save();
 
@@ -304,27 +320,45 @@ public class YModificaScontiProvvigioniRigheVendita extends BusinessObjectAdapte
 				while(iterRigheSec.hasNext()) {
 					OrdineVenditaRigaSec rigaSec = (OrdineVenditaRigaSec) iterRigheSec.next();
 					if(rigaSec.getTipoRiga() == TipoRiga.MERCE) {
-						rigaSec.setSconto(getSconto());
-						rigaSec.setScontoArticolo1(getScontoArticolo1());
-						rigaSec.setScontoArticolo2(getScontoArticolo2());
-						rigaSec.setMaggiorazione(getMaggiorazione());
-						rigaSec.setAgente(getAgente());
-						rigaSec.setSubagente(getSubagente());
-						rigaSec.setProvvigione2Agente(getProvvigione2Agente());
-						rigaSec.setProvvigione2Subagente(getProvvigione2Subagente());
+						if(getSconto() != null)
+							rigaSec.setSconto(getSconto());
+						if(getScontoArticolo1() != null)
+							rigaSec.setScontoArticolo1(getScontoArticolo1());
+						if(getScontoArticolo2() != null)
+							rigaSec.setScontoArticolo2(getScontoArticolo2());
+						if(getMaggiorazione() != null)
+							rigaSec.setMaggiorazione(getMaggiorazione());
+						if(getAgente() != null)
+							rigaSec.setAgente(getAgente());
+						if(getSubagente() != null)
+							rigaSec.setSubagente(getSubagente());
+						if(getProvvigione2Agente() != null)
+							rigaSec.setProvvigione2Agente(getProvvigione2Agente());
+						if(getProvvigione2Subagente() != null)
+							rigaSec.setProvvigione2Subagente(getProvvigione2Subagente());
 					}
 				}
 			}else {
-				riga.setSconto(getSconto());
-				riga.setScontoArticolo1(getScontoArticolo1());
-				riga.setScontoArticolo2(getScontoArticolo2());
-				riga.setMaggiorazione(getMaggiorazione());
+				if(getSconto() != null)
+					riga.setSconto(getSconto());
+				if(getScontoArticolo1() != null)
+					riga.setScontoArticolo1(getScontoArticolo1());
+				if(getScontoArticolo2() != null)
+					riga.setScontoArticolo2(getScontoArticolo2());
+				if(getMaggiorazione() != null)
+					riga.setMaggiorazione(getMaggiorazione());
 			}
-			riga.setAgente(getAgente());
-			riga.setSubagente(getSubagente());
-			riga.setProvvigione2Agente(getProvvigione2Agente());
-			riga.setProvvigione2Subagente(getProvvigione2Subagente());
-			riga.setAlfanumRiservatoUtente1(getAlfanumRiservatoUtente1());
+			if(getAgente() != null)
+				riga.setAgente(getAgente());
+			if(getSubagente() != null)
+				riga.setSubagente(getSubagente());
+			if(getProvvigione2Agente() != null)
+				riga.setProvvigione2Agente(getProvvigione2Agente());
+			if(getProvvigione2Subagente() != null)
+				riga.setProvvigione2Subagente(getProvvigione2Subagente());
+			if(getAlfanumRiservatoUtente1() != null)
+				riga.setAlfanumRiservatoUtente1(getAlfanumRiservatoUtente1());
+
 			riga.setFlagRiservatoUtente1(getFlagRiservatoUtente1());
 
 			rc = riga.save();
