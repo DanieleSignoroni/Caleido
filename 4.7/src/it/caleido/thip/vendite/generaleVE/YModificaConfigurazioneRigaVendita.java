@@ -248,12 +248,31 @@ public class YModificaConfigurazioneRigaVendita extends BusinessObjectAdapter im
 		List<PersistentObject> righe = getRigheSelezionate();
 		for(PersistentObject riga : righe) {
 			BODataCollector boDC = createDataCollector(getClassName());
+			
+			/*
+			 * Qui il problema e' che se cambio la configurazione i componenti a sua volta possono cambiare.
+			 * L'unico modo per effettuare questa operazione tramite standard con riga onDB e' fare la seguente.
+			 * 1.Pulire le righe secondarie.
+			 * 2.Spegnere il flag onDB.
+			 * 3.Lanciare la routine per la generazione delle righe
+			 * 4.Riaccendere il flag onDB al valore originale (in questo caso la riga deve per forza esistere se sono arrivato qui).
+			 */
 			if(riga instanceof OffertaClienteRigaPrm) {
-				((OffertaClienteRigaPrm) riga).setConfigurazione(destination);
-				boDC.setBo(((OffertaClienteRigaPrm) riga));
+				OffertaClienteRigaPrm rigaOff = ((OffertaClienteRigaPrm) riga);
+				rigaOff.setConfigurazione(destination);
+				rigaOff.getRigheSecondarie().clear();
+				rigaOff.setOnDB(false);
+				rigaOff.runGenerazioneRigheSec();
+				rigaOff.setOnDB(true);
+				boDC.setBo(rigaOff);
 			}else if(riga instanceof OrdineVenditaRigaPrm) {
-				((OrdineVenditaRigaPrm) riga).setConfigurazione(destination);
-				boDC.setBo(((OrdineVenditaRigaPrm) riga));
+				OrdineVenditaRigaPrm rigaOrd = ((OrdineVenditaRigaPrm) riga);
+				rigaOrd.setConfigurazione(destination);
+				rigaOrd.getRigheSecondarie().clear();
+				rigaOrd.setOnDB(false);
+				rigaOrd.runGenerazioneRigheSec();
+				rigaOrd.setOnDB(true);
+				boDC.setBo(rigaOrd);
 			}
 			boDC.setAutoCommit(false);
 			rc = boDC.save();

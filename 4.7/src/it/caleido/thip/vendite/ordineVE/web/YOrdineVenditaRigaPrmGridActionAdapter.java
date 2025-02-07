@@ -31,7 +31,7 @@ public class YOrdineVenditaRigaPrmGridActionAdapter extends OrdineVenditaRigaPrm
 	public static final String MODIFICA_MASSIVA_SCONTI_PROVVIGIONI_RES = "it.caleido.thip.vendite.generaleVE.resources.YModificaScontiProvvigioniRigheVendita";
 
 	public static final String MODIFICA_CONFIGURAZIONE = "MODIFICA_CONFIGURAZIONE";
-	public static final String MODIFICA_CONFIGURAZIONE_IMG = "com/thera/thermfw/util/images/sql_export.svg";
+	public static final String MODIFICA_CONFIGURAZIONE_IMG = "it/caleido/thip/vendite/generaleVE/img/ValorizzaPrezzo.svg";
 
 	@Override
 	public void modifyToolBar(WebToolBar toolBar) {

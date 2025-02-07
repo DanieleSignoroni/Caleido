@@ -336,6 +336,10 @@ public class YModificaScontiProvvigioniRigheVendita extends BusinessObjectAdapte
 							rigaSec.setProvvigione2Agente(getProvvigione2Agente());
 						if(getProvvigione2Subagente() != null)
 							rigaSec.setProvvigione2Subagente(getProvvigione2Subagente());
+						if(getAlfanumRiservatoUtente1() != null)
+							rigaSec.setAlfanumRiservatoUtente1(getAlfanumRiservatoUtente1());
+
+						rigaSec.setFlagRiservatoUtente1(getFlagRiservatoUtente1());
 					}
 				}
 			}else {
