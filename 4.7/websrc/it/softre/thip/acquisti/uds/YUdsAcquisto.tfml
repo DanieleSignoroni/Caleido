@@ -1,0 +1,28 @@
+<tfml>
+<generator type="form"/>
+<form classHdr="YUdsAcquisto"
+	  name="YUdsAcquistoForm" 
+ 	  errorList="yes"
+ 	  menubar="yes" 
+ 	  toolbar="yes" 
+ 	  onLoadPresent="yes"
+ 	  header="it.thera.thip.cs.Header.jsp"
+ 	  submitReset="none" 
+	  jsLibraryName="it/softre/thip/acquisti/uds/YUdsAcquisto.js"
+ 	  webFormModifierClass="it.softre.thip.acquisti.uds.web.YUdsAcquistoFormModifier"
+ 	  servlet="it.softre.thip.acquisti.uds.web.YUdsAcquistoEstrattoFormActionAdapter"
+ 	  footer="com.thera.thermfw.common.Footer.jsp">
+ 	  
+		<multisearchform name="RelFornitore" classRD="RelFornitore"/>
+		<multisearchform name="RelDocumentoAcquisto" classRD="RelDocumentoAcquisto" additionalfields="1" displaytype="id"/>
+		<multisearchform name="RelOrdineAcquisto" classRD="RelOrdineAcquisto" additionalfields="1" displaytype="id"/>
+		<textinput name="IdUds" classAD="IdUds"/>
+		<textarea name="Note" classAD="Note"/>
+		<button name="Testata" script="passaATestata()"/>
+		<button name="Convalida" script="convalidaYUdsAcquisto()"/>
+		<button name="Regressione" script="regressioneYUdsAcquisto()"/>
+		<button name="Definitivo" script="rendiDefinitivoYUdsAcquisto()"/>
+		<button name="Evasione" script="evadiUds()"/>
+		<button name="StampaEtichetta" script="stampaEtichetta()"/>
+</form>
+</tfml>
