@@ -598,7 +598,6 @@ public abstract class YUdsAcquistoPO extends EntitaAzienda implements BusinessOb
 		setIdSchemaCfgInternal(idSchemaCfg);
 		this.iSchemaCfg.setObject(schemaCfg);
 		setDirty();
-		setOnDB(false);
 	}
 
 	public SchemaCfg getSchemaCfg() {
@@ -612,7 +611,6 @@ public abstract class YUdsAcquistoPO extends EntitaAzienda implements BusinessOb
 		String idSchemaCfg = KeyHelper.getTokenObjectKey(key, 2);
 		setIdSchemaCfgInternal(idSchemaCfg);
 		setDirty();
-		setOnDB(false);
 	}
 
 	public String getSchemaCfgKey() {
@@ -622,7 +620,6 @@ public abstract class YUdsAcquistoPO extends EntitaAzienda implements BusinessOb
 	public void setIdSchemaCfg(String idSchemaCfg) {
 		setIdSchemaCfgInternal(idSchemaCfg);
 		setDirty();
-		setOnDB(false);
 	}
 
 	public String getIdSchemaCfg() {
@@ -649,7 +646,6 @@ public abstract class YUdsAcquistoPO extends EntitaAzienda implements BusinessOb
 		setIdVariabileCfgInternal(idVariabileCfg);
 		this.iValore.setObject(valore);
 		setDirty();
-		setOnDB(false);
 	}
 
 	public ValoreVariabileCfg getValore() {
@@ -665,7 +661,6 @@ public abstract class YUdsAcquistoPO extends EntitaAzienda implements BusinessOb
 		String idVariabileCfg = KeyHelper.getTokenObjectKey(key, 3);
 		setIdVariabileCfgInternal(idVariabileCfg);
 		setDirty();
-		setOnDB(false);
 	}
 
 	public String getValoreKey() {
@@ -674,10 +669,9 @@ public abstract class YUdsAcquistoPO extends EntitaAzienda implements BusinessOb
 
 	public void setSeqValore(Integer seqValore) {
 		String key = iValore.getKey();
-		Integer seqValoreTmp = new Integer(seqValore);
+		Integer seqValoreTmp = new Integer(seqValore != null ? seqValore : 0);
 		iValore.setKey(KeyHelper.replaceTokenObjectKey(key , 4, seqValoreTmp));
 		setDirty();
-		setOnDB(false);
 	}
 
 	public Integer getSeqValore() {
@@ -704,7 +698,6 @@ public abstract class YUdsAcquistoPO extends EntitaAzienda implements BusinessOb
 		setIdVariabileCfgInternal(idVariabileCfg);
 		this.iVariabile.setObject(variabile);
 		setDirty();
-		setOnDB(false);
 	}
 
 	public VariabileSchemaCfg getVariabile() {
@@ -720,7 +713,6 @@ public abstract class YUdsAcquistoPO extends EntitaAzienda implements BusinessOb
 		String idVariabileCfg = KeyHelper.getTokenObjectKey(key, 3);
 		setIdVariabileCfgInternal(idVariabileCfg);
 		setDirty();
-		setOnDB(false);
 	}
 
 	public String getVariabileKey() {
@@ -730,7 +722,6 @@ public abstract class YUdsAcquistoPO extends EntitaAzienda implements BusinessOb
 	public void setIdVariabileCfg(String idVariabileCfg) {
 		setIdVariabileCfgInternal(idVariabileCfg);
 		setDirty();
-		setOnDB(false);
 	}
 
 	public String getIdVariabileCfg() {

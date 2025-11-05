@@ -55,7 +55,7 @@ public class YUdsAcquistoFormModifier extends DocumentoEstrattoFormModifier  {
 		}
 
 		out.println("<td nowrap=\"true\" height=\"30px\">\n");
-		WebPullDownButton pdb = new WebPullDownButton("thEvasioneDiretta", null, null, getIconaBarraAzioniStandard("it/thera/thip/vendite/ordineVE/images/EvaOrdVenDir_24.gif"), "evasioneUds()()", null);
+		WebPullDownButton pdb = new WebPullDownButton("thEvasioneDiretta", null, null, "it/caleido/thip/acquisti/uds/img/EvaOffForDir48.gif", "evasioneUds()()", null);
 		pdb.setParent(getWebForm());
 		pdb.setWidth(widthBtnBarraAzioniStandard);
 		pdb.setHeight("30px");
@@ -87,7 +87,6 @@ public class YUdsAcquistoFormModifier extends DocumentoEstrattoFormModifier  {
 	}
 
 	public void writeBodyEndElements(JspWriter out) throws IOException {
-		super.writeBodyEndElements(out);
 		out.println(
 				"<script language=\"JavaScript1.2\" type=\"text/javascript\">" +
 						// "parent.document.title = document.forms[0].document.title;" // Commented on fix 12090

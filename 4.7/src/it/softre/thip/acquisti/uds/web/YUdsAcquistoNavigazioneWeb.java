@@ -29,7 +29,7 @@ public class YUdsAcquistoNavigazioneWeb extends DocumentoNavigazioneWeb {
 		iDescrittoreRigaPrm= "YUdsAcqRig";
 
 		iJspTestataEstratto = "it/softre/thip/acquisti/uds/YUdsAcquisto.jsp";
-		iJspTestataEstrattoAltezza = 250;
+		iJspTestataEstrattoAltezza = 280;
 
 		iJspTestataNuovo = "it/softre/thip/acquisti/uds/YUdsAcquistoNuovo.jsp";
 		iJspTestataCompleta = "it/softre/thip/acquisti/uds/YUdsAcquistoNuovo.jsp";
