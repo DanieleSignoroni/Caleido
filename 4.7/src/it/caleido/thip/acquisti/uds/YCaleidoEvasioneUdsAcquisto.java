@@ -13,6 +13,7 @@ import com.thera.thermfw.base.Trace;
 import com.thera.thermfw.common.BaseComponentsCollection;
 import com.thera.thermfw.common.BusinessObjectAdapter;
 import com.thera.thermfw.common.ErrorMessage;
+import com.thera.thermfw.persist.ConnectionManager;
 import com.thera.thermfw.persist.Factory;
 import com.thera.thermfw.persist.KeyHelper;
 import com.thera.thermfw.persist.PersistentObject;
@@ -47,6 +48,7 @@ import it.thera.thip.cs.ColonneFiltri;
 import it.thera.thip.cs.ThipException;
 import it.thera.thip.datiTecnici.configuratore.Configurazione;
 import it.thera.thip.datiTecnici.configuratore.ConfigurazioneTM;
+import it.thera.thip.produzione.ordese.OrdineEsecutivo;
 import it.thera.thip.vendite.generaleVE.PersDatiVen;
 import it.thera.thip.vendite.ordineVE.GestoreEvasioneVendita;
 import it.thera.thip.vendite.prezziExtra.DocRigaPrezziExtraVendita;
@@ -285,7 +287,6 @@ public class YCaleidoEvasioneUdsAcquisto extends BusinessObjectAdapter {
 						if(ordAcqRigPrm != null) {
 							aggiornaRiferimentiOrdineAcquistoRigaUds(udsAcqRig, ordAcqRigPrm);
 							ordAcqRigPrm.setGeneraRigheSecondarie(false);
-							udsAcqRig.rendiDefinitivaUdsAcquisto();
 							OrdineAcquistoRigaSec ordAcqRigSec = creaOrdineAcquistoRigaSec(ordAcq, ordAcqRigPrm, udsAcqRig);
 							if(ordAcqRigSec != null) {
 								ordAcqRigPrm.getRigheSecondarie().add(ordAcqRigSec);
@@ -298,12 +299,12 @@ public class YCaleidoEvasioneUdsAcquisto extends BusinessObjectAdapter {
 					}
 				}
 				aggiornaRiferimentiOrdineAcquistoTestataUds(udsAcqTes, ordAcq);
-				udsAcqTes.rendiDefinitivaUdsAcquisto();
 				udsAcqTes.save();
 			}
 			docBODC.setAutoCommit(true);
 			rc = docBODC.save();
 			if(rc == OrdineAcquistoDataCollector.OK) {
+				ConnectionManager.commit();
 				setChiaviSelezionati(ordAcq.getKey());
 			}else {
 				throw new ThipException(docBODC.getErrorList().getErrors());
@@ -330,8 +331,7 @@ public class YCaleidoEvasioneUdsAcquisto extends BusinessObjectAdapter {
 
 
 	public void aggiornaRiferimentiOrdineAcquistoTestataUds(YUdsAcquisto udsAcqTes, OrdineAcquisto ordAcq) {
-		udsAcqTes.setRAnnoOrdAcq(ordAcq.getAnnoDocumento());
-		udsAcqTes.setRNumOrdAcq(ordAcq.getNumeroDocumento());
+		udsAcqTes.setOrdineAcquisto(ordAcq);
 	}
 
 	public OrdineAcquistoRigaSec creaOrdineAcquistoRigaSec(OrdineAcquisto ordAcq, OrdineAcquistoRigaPrm rigaPrm, YUdsAcqRig udsAcqRig) {
@@ -403,8 +403,15 @@ public class YCaleidoEvasioneUdsAcquisto extends BusinessObjectAdapter {
 			ordAcqRig.setQtaInUMSecMag(udsAcqRig.getQtaSec() != null ? udsAcqRig.getQtaSec() : BigDecimal.ZERO);
 			ordAcqRig.setConfigurazione(conf);
 			ordAcqRig.setIdVersioneRcs(udsAcqRig.getRVersione());
-			ricalcolaQta(ordAcqRig);
 			ordAcqRig.setAssoggettamentoIVA(ordAcq.getAssoggettamentoIVA());
+			//.in dubbio se questi siano giusti cosi'...vediamo
+			/*if(udsAcqRig.getRelordprd() != null) {
+				OrdineEsecutivo oe = udsAcqRig.getRelordprd();
+				ordAcqRig.setCliente(oe.getCliente());
+				ordAcqRig.setAnnoOrdineCliente(oe.getAnnoOrdineCliente());
+				ordAcqRig.setNumeroOrdineCliente(oe.getNumeroOrdineCliente());
+				ordAcqRig.setRigaOrdineCliente(oe.getRigaOrdineCliente());
+			}*/
 		}
 		return ordAcqRig;
 	}
@@ -809,9 +816,7 @@ public class YCaleidoEvasioneUdsAcquisto extends BusinessObjectAdapter {
 	}
 
 	public void aggiornaRiferimentiOrdineAcquistoRigaUds(YUdsAcqRig udsAcqRig, OrdineAcquistoRigaPrm ordAcqRig) {
-		udsAcqRig.setRAnnoOrdAcq(ordAcqRig.getTestata().getAnnoDocumento());
-		udsAcqRig.setRNumOrdAcq(ordAcqRig.getTestata().getNumeroDocumento());
-		udsAcqRig.setRRigaOrdAcq(ordAcqRig.getSequenzaRiga());
+		udsAcqRig.setOrdineAcquistoRiga(ordAcqRig);
 		if(ordAcqRig.getDettaglioRigaDocumento() == null) {
 			udsAcqRig.setRRigaOrdAcq(ordAcqRig.getDettaglioRigaDocumento());
 		}

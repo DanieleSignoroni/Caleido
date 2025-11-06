@@ -553,19 +553,27 @@ public abstract class YUdsAcquistoPO extends EntitaAzienda implements BusinessOb
 	}
 
 	public String getRNumOrdAcq() {
-		return iRNumOrdAcq;
+		String key = iRelOrdineAcquisto.getKey();
+	    String idNumeroOrd = KeyHelper.getTokenObjectKey(key,3);
+	  	return idNumeroOrd;
 	}
 
 	public void setRNumOrdAcq(String iRNumOrdAcq) {
-		this.iRNumOrdAcq = iRNumOrdAcq;
+		String key = iRelOrdineAcquisto.getKey();
+		iRelOrdineAcquisto.setKey(KeyHelper.replaceTokenObjectKey(key , 3, iRNumOrdAcq));
+	    setDirty();
 	}
 
 	public String getRAnnoOrdAcq() {
-		return iRAnnoOrdAcq;
+		String key = iRelOrdineAcquisto.getKey();
+	    String idAnnoOrd = KeyHelper.getTokenObjectKey(key,2);
+	  	return idAnnoOrd;
 	}
 
 	public void setRAnnoOrdAcq(String iRAnnoOrdAcq) {
-		this.iRAnnoOrdAcq = iRAnnoOrdAcq;
+		String key = iRelOrdineAcquisto.getKey();
+		iRelOrdineAcquisto.setKey(KeyHelper.replaceTokenObjectKey(key , 2, iRAnnoOrdAcq));
+	    setDirty();
 	}
 
 	public OrdineAcquisto getOrdineAcquisto(){
