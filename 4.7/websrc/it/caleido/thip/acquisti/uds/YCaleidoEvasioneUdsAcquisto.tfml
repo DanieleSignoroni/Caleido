@@ -1,0 +1,26 @@
+<tfml>
+<generator type="form"/>
+<form classHdr="YCaleidoEvasioneUdsAcquis"
+			name="YCaleidoEvasioneUdsAcqForm"
+			errorList="yes"
+			menubar="no"
+			toolbar="yes"
+			jsLibraryName="it/caleido/thip/acquisti/uds/YCaleidoEvasioneUdsAcquisto.js"
+			servlet="it.caleido.thip.acquisti.uds.web.YCaleidoEvasioneUdsAcqFormActionAdapter"
+			webFormModifierClass="it.caleido.thip.acquisti.uds.web.YCaleidoEvasioneUdsAcqFormModifier"
+			onLoadPresent="yes"
+			header="it.thera.thip.cs.Header.jsp"
+        footer="it.thera.thip.cs.Footer.jsp">
+<toolbar name="myToolBar" imgwidth="16" imgheight="16">
+      <import file="it/thera/thip/cs/defObjMenu.tfml"/>
+    </toolbar> 
+		<textinput name="DataDocumento" classAD="DataDocumento" showCalendarBtn="yes"/>
+		<multisearchform name="NumeratoreOrdAcq" classRD="NumeratoreOrdAcq" />
+		<multisearchform name="SerieOrdAcq" classRD="SerieOrdAcq" />
+		<multisearchform name="CauOrdAcqTes" classRD="CauOrdAcqTes" onKeyChange="checkCampiObbligatori()"/>
+		<multisearchform name="Fornitore" classRD="Fornitore"/>
+		<textinput name="DataRifIntestatario" classAD="DataRifIntestatario" showCalendarBtn="yes"/>
+		<textinput name="NumeroRifIntestatario" classAD="NumeroRifIntestatario"/>
+		<button name="EvasioneUdsAcquisto" script="evasioneUds()"/>
+</form>
+</tfml>

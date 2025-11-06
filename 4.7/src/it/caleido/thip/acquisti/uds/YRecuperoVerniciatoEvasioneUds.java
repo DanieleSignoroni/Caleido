@@ -1,8 +1,16 @@
 package it.caleido.thip.acquisti.uds;
 
+import java.sql.SQLException;
+import java.util.Iterator;
+
+import com.thera.thermfw.base.TimeUtils;
+import com.thera.thermfw.base.Trace;
 import com.thera.thermfw.persist.Factory;
 
 import it.thera.thip.base.articolo.Articolo;
+import it.thera.thip.base.generale.PersDatiGen;
+import it.thera.thip.datiTecnici.modpro.ImpNodoArticolo;
+import it.thera.thip.datiTecnici.modpro.ModproImplosione;
 
 /**
  *
@@ -32,8 +40,31 @@ public class YRecuperoVerniciatoEvasioneUds {
 		return instance;
 	}
 
+	@SuppressWarnings("rawtypes")
 	public Articolo trovaVerniciatoTramiteGrezzo(Articolo grezzo) {
 		Articolo vern = null;
+		ModproImplosione modproImplosione = (ModproImplosione) Factory.createObject(ModproImplosione.class);
+		modproImplosione.setArticolo(grezzo);
+		modproImplosione.setIdStabilimento(PersDatiGen.getCurrentPersDatiGen().getIdStabilimento());
+		modproImplosione.setData(TimeUtils.getCurrentDate());
+		modproImplosione.setTipoImplosione(ModproImplosione.PRODUZIONE);
+		modproImplosione.setDominio(ModproImplosione.PIANIFICAZIONE);
+		modproImplosione.setLivello(1);
+		try {
+			modproImplosione.run();
+			 if (modproImplosione.getNodoRadice() == null) {
+				 return null;
+			 }else {
+				 Iterator iterNodiFigli = modproImplosione.getNodoRadice().getNodiFigli().iterator();
+				 while(iterNodiFigli.hasNext()) {
+					 ImpNodoArticolo nodo = (ImpNodoArticolo) iterNodiFigli.next();
+					 vern = nodo.getArticolo().getArticolo();
+					 break;
+				 }
+			 }
+		} catch (SQLException e) {
+			e.printStackTrace(Trace.excStream);
+		}
 		return vern;
 	}
 }
