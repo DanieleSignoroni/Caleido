@@ -85,7 +85,7 @@ public class YCaleidoEvasioneUdsAcquistoSV extends DocumentoCambiaJSP{
 		}
 		if(errors.isEmpty()) {
 			boolean daEstratto = datiSessione.isSmartMode();
-			String url = "it/caleido/thip/acquisti/uds/YApriDocumenti.jsp?ChiaveOrdAcq="+bo.getKey();
+			String url = "it/caleido/thip/acquisti/uds/YApriDocumenti.jsp?ChiaveOrdAcq="+bo.getChiaviSelezionati();
 			url += "&DaEstratto="+(daEstratto == true ? "true" : "false")+"";
 			se.sendRequest(getServletContext(), url, false);
 		}else {

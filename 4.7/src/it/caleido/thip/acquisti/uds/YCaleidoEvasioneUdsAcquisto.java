@@ -250,6 +250,9 @@ public class YCaleidoEvasioneUdsAcquisto extends BusinessObjectAdapter {
 				if(udsAcqTes != null && (udsAcqTes.getSeqValore() == null || udsAcqTes.getSeqValore().compareTo(0) == 0)) {
 					errors.add(new ErrorMessage("BAS0000078","Per l'UDS "+udsAcqTes.getIdUds()+" non e' stato selezionato il colore"));
 				}	
+				if(udsAcqTes != null && udsAcqTes.getOrdineAcquisto() != null) {
+					errors.add(new ErrorMessage("BAS0000078","L'UDS "+udsAcqTes.getIdUds()+" ha gia' un ordine di acquisto collegato "+udsAcqTes.getOrdineAcquisto().getNumeroDocumentoFormattato()));
+				}
 			} catch (SQLException e) {
 				e.printStackTrace(Trace.excStream);
 			}
@@ -301,7 +304,7 @@ public class YCaleidoEvasioneUdsAcquisto extends BusinessObjectAdapter {
 			docBODC.setAutoCommit(true);
 			rc = docBODC.save();
 			if(rc == OrdineAcquistoDataCollector.OK) {
-				setKey(ordAcq.getKey());
+				setChiaviSelezionati(ordAcq.getKey());
 			}else {
 				throw new ThipException(docBODC.getErrorList().getErrors());
 			}
@@ -380,22 +383,29 @@ public class YCaleidoEvasioneUdsAcquisto extends BusinessObjectAdapter {
 
 	public OrdineAcquistoRigaPrm creaOrdineAcquistoRigaPrm(OrdineAcquisto ordAcq, YUdsAcqRig udsAcqRig, Articolo articolo, String idEsternoConfig) throws SQLException {
 		OrdineAcquistoRigaPrm ordAcqRig = (OrdineAcquistoRigaPrm)Factory.createObject(OrdineAcquistoRigaPrm.class);
-		ordAcqRig.setIdAzienda(Azienda.getAziendaCorrente());
-		ordAcqRig.setTestata(ordAcq);
-		ordAcqRig.setIdCauRig(ordAcq.getCausale().getCausaleRigaKey());
-		ordAcqRig.completaBO();
-		ordAcqRig.setArticolo(articolo);
-		UnitaMisura um = ordAcqRig.getArticolo().getUMDefaultVendita();
-		ordAcqRig.setUMRif(um);
-		ordAcqRig.setQtaInUMPrmMag(udsAcqRig.getQtaPrm());
-		ordAcqRig.setQtaInUMRif(udsAcqRig.getQtaPrm());
-		ordAcqRig.setQtaInUMSecMag(udsAcqRig.getQtaPrm());
-		ordAcqRig.setConfigurazione(getConfigurazione(idEsternoConfig, ordAcqRig.getIdArticolo()));
-		ordAcqRig.setIdUMRif(articolo.getArticoloDatiAcquisto().getIdUMPrimaria());
-		ordAcqRig.setIdUMPrm(articolo.getIdUMPrmMag());
-		ordAcqRig.setIdVersioneRcs(udsAcqRig.getRVersione());
-		ricalcolaQta(ordAcqRig);
-		ordAcqRig.setAssoggettamentoIVA(ordAcq.getAssoggettamentoIVA());
+		Configurazione conf = getConfigurazione(idEsternoConfig, articolo.getIdArticolo());
+		if(conf != null) {
+			DatiArticoloRigaAcquisto datiArticolo = getDatiArticoloAcquisto(
+					articolo.getIdArticolo(), 
+					conf.getIdConfigurazione().toString(),
+					ordAcq.getKey(), 
+					(udsAcqRig.getRVersione() != null ? udsAcqRig.getRVersione().toString() : ""));
+			ordAcqRig.setIdAzienda(Azienda.getAziendaCorrente());
+			ordAcqRig.setTestata(ordAcq);
+			ordAcqRig.setIdCauRig(ordAcq.getCausale().getCausaleRigaKey());
+			ordAcqRig.completaBO();
+			ordAcqRig.setArticolo(articolo);
+			ordAcqRig.setUMRif(datiArticolo.getUMRiferimentoDefault());
+			ordAcqRig.setIdUMPrm(articolo.getIdUMPrmMag());
+			BigDecimal qtaInUmRif = articolo.convertiUM(udsAcqRig.getQtaPrm(),ordAcqRig.getUMPrm(),ordAcqRig.getUMRif(),ordAcqRig.getArticoloVersRichiesta());
+			ordAcqRig.setQtaInUMRif(qtaInUmRif);
+			ordAcqRig.setQtaInUMPrmMag(udsAcqRig.getQtaPrm());
+			ordAcqRig.setQtaInUMSecMag(udsAcqRig.getQtaSec() != null ? udsAcqRig.getQtaSec() : BigDecimal.ZERO);
+			ordAcqRig.setConfigurazione(conf);
+			ordAcqRig.setIdVersioneRcs(udsAcqRig.getRVersione());
+			ricalcolaQta(ordAcqRig);
+			ordAcqRig.setAssoggettamentoIVA(ordAcq.getAssoggettamentoIVA());
+		}
 		return ordAcqRig;
 	}
 
@@ -427,7 +437,7 @@ public class YCaleidoEvasioneUdsAcquisto extends BusinessObjectAdapter {
 		try {
 			String where =
 					ConfigurazioneTM.ID_AZIENDA + "='" + Azienda.getAziendaCorrente() + "' AND " +
-							ConfigurazioneTM.ID_CONFIG + "='" + idConfigEsterno + "' AND " +
+							ConfigurazioneTM.COD_CONFIG + "='" + idConfigEsterno + "' AND " +
 							ConfigurazioneTM.R_ARTICOLO + "='" + idArticolo + "'";
 			Vector v = Configurazione.retrieveList(where, "", false);
 			conf = v.isEmpty() ? null : (Configurazione)v.elementAt(0);
@@ -508,7 +518,7 @@ public class YCaleidoEvasioneUdsAcquisto extends BusinessObjectAdapter {
 					rRicalcoloQta, 
 					rIdUMDestinazione, rSiglaUMDestinazione, rFlagRigaLotto, 
 					selectedRow);
-			if(cqw != null) {
+			if(cqw != null && cqw.getQuantRigaUMPrmMag() != null) {
 				String qtaPrmMagStr = cqw.getQuantRigaUMPrmMag().replace(",", ".");
 				BigDecimal qtaPrmMag = new BigDecimal(qtaPrmMagStr);
 				if(qtaPrmMag != null)
