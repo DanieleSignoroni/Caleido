@@ -4,12 +4,17 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
+import com.thera.thermfw.ad.ClassADCollection;
+import com.thera.thermfw.ad.ClassADCollectionManager;
 import com.thera.thermfw.base.TimeUtils;
 import com.thera.thermfw.base.Trace;
+import com.thera.thermfw.collector.BODataCollector;
 import com.thera.thermfw.common.BaseComponentsCollection;
 import com.thera.thermfw.common.BusinessObjectAdapter;
 import com.thera.thermfw.common.ErrorMessage;
@@ -21,9 +26,6 @@ import com.thera.thermfw.persist.Proxy;
 
 import it.softre.thip.acquisti.uds.YUdsAcqRig;
 import it.softre.thip.acquisti.uds.YUdsAcquisto;
-import it.thera.thip.acquisti.documentoAC.DocumentoAcqRigaPrm;
-import it.thera.thip.acquisti.documentoAC.DocumentoAcqRigaSec;
-import it.thera.thip.acquisti.documentoAC.DocumentoAcquisto;
 import it.thera.thip.acquisti.generaleAC.CausaleOrdineTestataAcq;
 import it.thera.thip.acquisti.ordineAC.OrdineAcquisto;
 import it.thera.thip.acquisti.ordineAC.OrdineAcquistoRigaPrm;
@@ -32,27 +34,18 @@ import it.thera.thip.acquisti.ordineAC.web.OrdineAcquistoDataCollector;
 import it.thera.thip.base.articolo.Articolo;
 import it.thera.thip.base.articolo.ArticoloVersione;
 import it.thera.thip.base.azienda.Azienda;
-import it.thera.thip.base.comuniVenAcq.GestoreCalcoloCosti;
-import it.thera.thip.base.comuniVenAcq.OrdineTestata;
-import it.thera.thip.base.comuniVenAcq.TipoCostoRiferimento;
-import it.thera.thip.base.comuniVenAcq.TipoRiga;
 import it.thera.thip.base.comuniVenAcq.web.CalcoloQuantitaWeb;
 import it.thera.thip.base.comuniVenAcq.web.CalcoloQuantitaWrapper;
 import it.thera.thip.base.comuniVenAcq.web.DatiArticoloRigaAcquisto;
+import it.thera.thip.base.documenti.web.DocumentoDataCollector;
 import it.thera.thip.base.fornitore.FornitoreAcquisto;
 import it.thera.thip.base.generale.Numeratore;
 import it.thera.thip.base.generale.Serie;
 import it.thera.thip.base.generale.UnitaMisura;
-import it.thera.thip.base.prezziExtra.DocOrdRigaPrezziExtra;
 import it.thera.thip.cs.ColonneFiltri;
 import it.thera.thip.cs.ThipException;
 import it.thera.thip.datiTecnici.configuratore.Configurazione;
 import it.thera.thip.datiTecnici.configuratore.ConfigurazioneTM;
-import it.thera.thip.produzione.ordese.OrdineEsecutivo;
-import it.thera.thip.vendite.generaleVE.PersDatiVen;
-import it.thera.thip.vendite.ordineVE.GestoreEvasioneVendita;
-import it.thera.thip.vendite.prezziExtra.DocRigaPrezziExtraVendita;
-import it.thera.thip.vendite.prezziExtra.OrdineRigaPrezziExtraVendita;
 
 /**
  * <p></p>
@@ -273,6 +266,7 @@ public class YCaleidoEvasioneUdsAcquisto extends BusinessObjectAdapter {
 		docBODC.setBo(ordAcq);
 		int rc = docBODC.save();
 		if(rc == OrdineAcquistoDataCollector.OK) {
+			Map<YUdsAcqRig, String> righeUdsDaAggiornare = new HashMap<YUdsAcqRig, String>();
 			java.util.Iterator lstChiaviSelectedIte = getListChiaviSelezionati().iterator();
 			while (lstChiaviSelectedIte.hasNext()) {
 				String nextKey = (String)lstChiaviSelectedIte.next();
@@ -285,18 +279,36 @@ public class YCaleidoEvasioneUdsAcquisto extends BusinessObjectAdapter {
 					if(verniciato != null) {
 						OrdineAcquistoRigaPrm ordAcqRigPrm = creaOrdineAcquistoRigaPrm(ordAcq, udsAcqRig, verniciato, udsAcqTes.getValore().getCarCodCfg());
 						if(ordAcqRigPrm != null) {
-							aggiornaRiferimentiOrdineAcquistoRigaUds(udsAcqRig, ordAcqRigPrm);
 							ordAcqRigPrm.setGeneraRigheSecondarie(false);
 							OrdineAcquistoRigaSec ordAcqRigSec = creaOrdineAcquistoRigaSec(ordAcq, ordAcqRigPrm, udsAcqRig);
 							if(ordAcqRigSec != null) {
 								ordAcqRigPrm.getRigheSecondarie().add(ordAcqRigSec);
 							}
-							udsAcqRig.save();
-							ordAcq.getRighe().add(ordAcqRigPrm);
+
+							ordAcqRigPrm.setSalvaTestata(false);
+
+							DocumentoDataCollector docBODCRigaPrm = creaOrdineAcquistoRigaPrmBODC(ordAcqRigPrm);
+							int rcRig = docBODCRigaPrm.save();
+							if(rcRig == BODataCollector.OK) {
+								righeUdsDaAggiornare.put(udsAcqRig, ordAcqRigSec.getKey());
+							}else{
+								throw new ThipException(docBODCRigaPrm.getErrorList().getErrors());
+							}
 						}
 					}else {
 						throw new ThipException(new ErrorMessage("BAS0000078","Per l'articolo "+udsAcqRig.getRArticolo()+" non e' stato trovato il verniciato"));
 					}
+				}
+				for (Map.Entry<YUdsAcqRig, String> entry : righeUdsDaAggiornare.entrySet()) {
+					YUdsAcqRig udsAcqRig = entry.getKey();
+					String[] vals = KeyHelper.unpackObjectKey(entry.getValue());
+
+					udsAcqRig.setRAnnoOrdAcq(vals[1]);
+					udsAcqRig.setRNumOrdAcq(vals[2]);
+					udsAcqRig.setRRigaOrdAcq(KeyHelper.stringToIntegerObj(vals[3]));
+					udsAcqRig.setRRigaDetOrdAcq(KeyHelper.stringToIntegerObj(vals[4]));
+
+					udsAcqRig.save();
 				}
 				aggiornaRiferimentiOrdineAcquistoTestataUds(udsAcqTes, ordAcq);
 				udsAcqTes.save();
@@ -313,6 +325,27 @@ public class YCaleidoEvasioneUdsAcquisto extends BusinessObjectAdapter {
 			throw new ThipException(docBODC.getErrorList().getErrors());
 		}
 		return 1;
+	}
+
+	public DocumentoDataCollector creaOrdineAcquistoRigaPrmBODC(OrdineAcquistoRigaPrm oar) {
+		try {
+			String className = "OrdineAcquistoRigaPrm";
+			ClassADCollection cadc = ClassADCollectionManager.collectionWithName(className);
+			String collectorName = cadc.getBODataCollector();
+			if (collectorName == null) {
+				collectorName = DocumentoDataCollector.class.getName();
+			}
+			DocumentoDataCollector bo = (DocumentoDataCollector) Factory.createObject(collectorName);
+			bo.initialize(className);
+			bo.setAutoCommit(false);
+			bo.setBo(oar);
+			bo.loadAttValue();
+			bo.impostaSecondoCausale();
+			return bo;
+		}catch (Exception e) {
+			e.printStackTrace(Trace.excStream);
+		}
+		return null;
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -332,6 +365,13 @@ public class YCaleidoEvasioneUdsAcquisto extends BusinessObjectAdapter {
 
 	public void aggiornaRiferimentiOrdineAcquistoTestataUds(YUdsAcquisto udsAcqTes, OrdineAcquisto ordAcq) {
 		udsAcqTes.setOrdineAcquisto(ordAcq);
+	}
+
+	public void aggiornaRiferimentiOrdineAcquistoRigaUds(YUdsAcqRig udsAcqRig, OrdineAcquistoRigaPrm ordAcqRig) {
+		udsAcqRig.setOrdineAcquistoRiga(ordAcqRig);
+		if(ordAcqRig.getDettaglioRigaDocumento() == null) {
+			udsAcqRig.setRRigaOrdAcq(ordAcqRig.getDettaglioRigaDocumento());
+		}
 	}
 
 	public OrdineAcquistoRigaSec creaOrdineAcquistoRigaSec(OrdineAcquisto ordAcq, OrdineAcquistoRigaPrm rigaPrm, YUdsAcqRig udsAcqRig) {
@@ -456,47 +496,6 @@ public class YCaleidoEvasioneUdsAcquisto extends BusinessObjectAdapter {
 		return conf;
 	}
 
-	/**
-	 * DSSOF3	04/10/2022	Metodo copiato dallo STD per eseguire il ricalcolo qta in base all'UM.
-	 * @param riga
-	 */
-	public void ricalcolaQta(DocumentoAcqRigaPrm riga) {
-		try {
-			UnitaMisura umRif = getUnitaMisura(riga.getIdUMRif());
-			UnitaMisura umPrm = getUnitaMisura(riga.getIdUMPrm());
-			UnitaMisura umSec = getUnitaMisura(riga.getIdUMSec());
-			UnitaMisura umOrigine = UnitaMisura.getUM(riga.getIdUMRif());
-			Articolo articolo = (Articolo) riga.getArticolo();
-			BigDecimal quant = riga.getQtaInUMPrm() != null ? riga.getQtaInUMPrm() : new BigDecimal(0);
-			String idVersione = riga.getIdVersioneSal() != null ? riga.getIdVersioneSal().toString() : "";
-			ArticoloVersione articoloVersione = getArticoloVersione(Azienda.getAziendaCorrente() ,articolo.getIdArticolo(), idVersione); 
-			String dominio = "V";
-			String siglaUMOrigin = "R";
-			boolean rRicalcoloQta = true;
-			String rIdUMDestinazione = riga.getIdUMPrm();
-			String rSiglaUMDestinazione = "P";
-			String rFlagRigaLotto = "R";
-			String selectedRow = null;
-			CalcoloQuantitaWeb cqw =  CalcoloQuantitaWrapper.get().calcolaQuantita(
-					articolo, 
-					articoloVersione, 
-					quant, 
-					siglaUMOrigin, 
-					dominio, 
-					umOrigine, umRif, umPrm, umSec, 
-					rRicalcoloQta, 
-					rIdUMDestinazione, rSiglaUMDestinazione, rFlagRigaLotto, 
-					selectedRow);
-			if(cqw != null) {
-				String qtaPrmMagStr = cqw.getQuantRigaUMPrmMag().replace(",", ".");
-				BigDecimal qtaPrmMag = new BigDecimal(qtaPrmMagStr);
-				if(qtaPrmMag != null)
-					riga.getQtaAttesaEvasione().setQuantitaInUMRif(qtaPrmMag);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 
 	public void ricalcolaQta(OrdineAcquistoRigaPrm riga) {
 		try {
@@ -572,41 +571,6 @@ public class YCaleidoEvasioneUdsAcquisto extends BusinessObjectAdapter {
 		}
 	}
 
-	public void ricalcolaQta(DocumentoAcqRigaSec riga) {
-		try {
-			UnitaMisura umRif = getUnitaMisura(riga.getIdUMRif());
-			UnitaMisura umPrm = getUnitaMisura(riga.getIdUMPrm());
-			UnitaMisura umSec = getUnitaMisura(riga.getIdUMSec());
-			UnitaMisura umOrigine = UnitaMisura.getUM(riga.getIdUMRif());
-			Articolo articolo = (Articolo) riga.getArticolo();
-			BigDecimal quant = riga.getQtaInUMAcq() != null ? riga.getQtaInUMAcq() : new BigDecimal(0);
-			String idVersione = riga.getIdVersioneSal() != null ? riga.getIdVersioneSal().toString() : "";
-			ArticoloVersione articoloVersione = getArticoloVersione(Azienda.getAziendaCorrente() ,articolo.getIdArticolo(), idVersione); 
-			String dominio = "V";
-			String siglaUMOrigin = "R";
-			boolean rRicalcoloQta = true;
-			String rIdUMDestinazione = riga.getIdUMPrm();
-			String rSiglaUMDestinazione = "P";
-			String rFlagRigaLotto = "R";
-			String selectedRow = null;
-			CalcoloQuantitaWeb cqw =  CalcoloQuantitaWrapper.get().calcolaQuantita(
-					articolo, 
-					articoloVersione, 
-					quant, 
-					siglaUMOrigin, 
-					dominio, 
-					umOrigine, umRif, umPrm, umSec, 
-					rRicalcoloQta, 
-					rIdUMDestinazione, rSiglaUMDestinazione, rFlagRigaLotto, 
-					selectedRow);
-			String qtaPrmMagStr = cqw.getQuantRigaUMPrmMag().replace(",", ".");
-			BigDecimal qtaPrmMag = new BigDecimal(qtaPrmMagStr);
-			if(qtaPrmMag != null)
-				riga.getQtaAttesaEvasione().setQuantitaInUMRif(qtaPrmMag); 
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 
 	/**
 	 * DSSOF3	Metodo copiato dallo standard per prendere la versione dell'articolo.
@@ -649,186 +613,4 @@ public class YCaleidoEvasioneUdsAcquisto extends BusinessObjectAdapter {
 		return um;
 	}
 
-	/**
-	 * DSSOF3	70687	Se sulla riga acquisto è presente la riga ordine acuisto aggiorno gli attributi
-	 * 					della riga documento acquisto tramite l'ordine.
-	 * @param docAcqRigPrm
-	 * @param udsAcqRig
-	 */
-	public void aggiornaAttributiDaRigaOrdine(DocumentoAcqRigaPrm docAcqRigPrm, YUdsAcqRig udsAcqRig) {
-		try {
-			if(udsAcqRig.getRAnnoOrdAcq() != null &&  udsAcqRig.getRNumOrdAcq() != null &&  udsAcqRig.getRRigaOrdAcq().toString() != null) {
-				OrdineAcquistoRigaPrm rigaOrdine = (OrdineAcquistoRigaPrm) OrdineAcquistoRigaPrm.elementWithKey(OrdineAcquistoRigaPrm.class,
-						KeyHelper.buildObjectKey(new String[] {Azienda.getAziendaCorrente(), udsAcqRig.getRAnnoOrdAcq(), udsAcqRig.getRNumOrdAcq(), udsAcqRig.getRRigaOrdAcq().toString()}), 0);
-				if (rigaOrdine != null) {
-					docAcqRigPrm.setRigaOrdine(rigaOrdine);
-					docAcqRigPrm.setRRigaOrd(rigaOrdine.getNumeroRigaDocumento());
-					docAcqRigPrm.setSpecializzazioneRiga(rigaOrdine.getSpecializzazioneRiga());
-
-					docAcqRigPrm.setSequenzaRiga(rigaOrdine.getSequenzaRiga());
-					docAcqRigPrm.setTipoRiga(rigaOrdine.getTipoRiga());
-					if (rigaOrdine.getTipoRiga() == TipoRiga.OMAGGIO) {
-						docAcqRigPrm.setServizioCalcDatiAcquisto(false);
-					}
-					docAcqRigPrm.setMagazzino(rigaOrdine.getMagazzino());
-					docAcqRigPrm.setArticolo(rigaOrdine.getArticolo());
-					docAcqRigPrm.setArticoloVersSaldi(rigaOrdine.getArticoloVersSaldi());
-					docAcqRigPrm.setArticoloVersRichiesta(rigaOrdine.getArticoloVersRichiesta());
-					docAcqRigPrm.setConfigurazione(rigaOrdine.getConfigurazione());
-					docAcqRigPrm.setDescrizioneArticolo(rigaOrdine.getDescrizioneArticolo());
-					docAcqRigPrm.setDescrizioneExtArticolo(rigaOrdine.getDescrizioneExtArticolo());
-					String nota = docAcqRigPrm.getNota();
-					if (nota != null && !nota.equals("")) {
-						if (rigaOrdine.getNota() != null && !rigaOrdine.getNota().equals("")) {
-							nota = rigaOrdine.getNota()  + " " + nota;
-						}
-					} else {
-						nota = rigaOrdine.getNota();
-					}
-					if (nota != null && nota.length() > 250) {
-						nota = nota.substring(0, 250);
-					}
-					docAcqRigPrm.setNota(nota);
-					docAcqRigPrm.setDocumentoMM(rigaOrdine.getDocumentoMM());
-					docAcqRigPrm.setSpesa(rigaOrdine.getSpesa());
-					docAcqRigPrm.setImportoPercentualeSpesa(rigaOrdine.getImportoPercentualeSpesa());
-					docAcqRigPrm.setSpesaPercentuale(rigaOrdine.isSpesaPercentuale());
-					docAcqRigPrm.setUMRifKey(rigaOrdine.getUMRifKey());
-					docAcqRigPrm.setUMPrmKey(rigaOrdine.getUMPrmKey());
-					docAcqRigPrm.setUMSecKey(rigaOrdine.getUMSecKey());
-					docAcqRigPrm.setRicalcoloQtaFattoreConv(rigaOrdine.isRicalcoloQtaFattoreConv());
-					docAcqRigPrm.setCoefficienteImpiego(rigaOrdine.getCoefficienteImpiego());
-					docAcqRigPrm.setBloccoRicalcoloQtaComp(rigaOrdine.isBloccoRicalcoloQtaComp());
-					docAcqRigPrm.setTipoCostoRiferimento(rigaOrdine.getTipoCostoRiferimento());
-					docAcqRigPrm.setDataConsegnaRichiesta(rigaOrdine.getDataConsegnaRichiesta());
-					docAcqRigPrm.setDataConsegnaConfermata(rigaOrdine.getDataConsegnaConfermata());
-					docAcqRigPrm.setSettConsegnaRichiesta(rigaOrdine.getSettConsegnaRichiesta());
-					docAcqRigPrm.setSettConsegnaConfermata(rigaOrdine.getSettConsegnaConfermata());
-					docAcqRigPrm.setIdListino(rigaOrdine.getIdListino());
-					BigDecimal bd = GestoreEvasioneVendita.getBigDecimalZero();
-					bd = rigaOrdine.getPrezzo() == null ? GestoreEvasioneVendita.getBigDecimalZero() : rigaOrdine.getPrezzo();
-					docAcqRigPrm.setPrezzo(bd);
-					bd = rigaOrdine.getPrezzoExtra() == null ? GestoreEvasioneVendita.getBigDecimalZero() : rigaOrdine.getPrezzoExtra();
-					docAcqRigPrm.setPrezzoExtra(bd);
-					bd = rigaOrdine.getPrezzoListino() == null ? GestoreEvasioneVendita.getBigDecimalZero() : rigaOrdine.getPrezzoListino();
-					docAcqRigPrm.setPrezzoListino(bd);
-					bd = rigaOrdine.getPrezzoExtraListino() == null ? GestoreEvasioneVendita.getBigDecimalZero() : rigaOrdine.getPrezzoExtraListino();
-					docAcqRigPrm.setPrezzoExtraListino(bd);
-					docAcqRigPrm.setRiferimentoUMPrezzo(rigaOrdine.getRiferimentoUMPrezzo());
-					docAcqRigPrm.setTipoPrezzo(rigaOrdine.getTipoPrezzo());
-					docAcqRigPrm.setBloccoRclPrzScnFatt(rigaOrdine.isBloccoRclPrzScnFatt());
-					docAcqRigPrm.setProvenienzaPrezzo(rigaOrdine.getProvenienzaPrezzo());
-					docAcqRigPrm.setTipoRigaListino(rigaOrdine.getTipoRigaListino());
-					docAcqRigPrm.setAssoggettamentoIVA(rigaOrdine.getAssoggettamentoIVA());
-					docAcqRigPrm.setScontoArticolo1(rigaOrdine.getScontoArticolo1());
-					docAcqRigPrm.setScontoArticolo2(rigaOrdine.getScontoArticolo2());
-					docAcqRigPrm.setMaggiorazione(rigaOrdine.getMaggiorazione());
-					docAcqRigPrm.setSconto(rigaOrdine.getSconto());
-					docAcqRigPrm.setPrcScontoIntestatario(rigaOrdine.getPrcScontoIntestatario());
-					docAcqRigPrm.setPrcScontoModalita(rigaOrdine.getPrcScontoModalita());
-					docAcqRigPrm.setScontoModalita(rigaOrdine.getScontoModalita());
-					docAcqRigPrm.setCommessa(rigaOrdine.getCommessa());
-					docAcqRigPrm.setCentroCosto(rigaOrdine.getCentroCosto());
-					if (rigaOrdine.getDatiCA() != null){
-						docAcqRigPrm.getDatiCA().setVoceSpesaCA(rigaOrdine.getDatiCA().getVoceSpesaCA());
-						docAcqRigPrm.getDatiCA().setVoceCA4(rigaOrdine.getDatiCA().getVoceCA4());
-						docAcqRigPrm.getDatiCA().setVoceCA5(rigaOrdine.getDatiCA().getVoceCA5());
-						docAcqRigPrm.getDatiCA().setVoceCA6(rigaOrdine.getDatiCA().getVoceCA6());
-						docAcqRigPrm.getDatiCA().setVoceCA7(rigaOrdine.getDatiCA().getVoceCA7());
-						docAcqRigPrm.getDatiCA().setVoceCA8(rigaOrdine.getDatiCA().getVoceCA8());
-					}
-					docAcqRigPrm.setGruppoContiAnalitica(rigaOrdine.getGruppoContiAnalitica());
-					docAcqRigPrm.setPriorita(rigaOrdine.getPriorita());
-					docAcqRigPrm.setStatoInvioEDI(rigaOrdine.getStatoInvioEDI());
-					docAcqRigPrm.setStatoInvioDatawarehouse(rigaOrdine.getStatoInvioDatawarehouse());
-					docAcqRigPrm.setStatoInvioLogistica(rigaOrdine.getStatoInvioLogistica());
-					docAcqRigPrm.setStatoInvioContAnalitica(rigaOrdine.getStatoInvioContAnalitica());
-					docAcqRigPrm.setNonFatturare(rigaOrdine.isNonFatturare());
-					docAcqRigPrm.setFlagRiservatoUtente1(rigaOrdine.getFlagRiservatoUtente1());
-					docAcqRigPrm.setFlagRiservatoUtente2(rigaOrdine.getFlagRiservatoUtente2());
-					docAcqRigPrm.setFlagRiservatoUtente3(rigaOrdine.getFlagRiservatoUtente3());
-					docAcqRigPrm.setFlagRiservatoUtente4(rigaOrdine.getFlagRiservatoUtente4());
-					docAcqRigPrm.setFlagRiservatoUtente5(rigaOrdine.getFlagRiservatoUtente5());
-					docAcqRigPrm.setAlfanumRiservatoUtente1(rigaOrdine.getAlfanumRiservatoUtente1());
-					docAcqRigPrm.setAlfanumRiservatoUtente2(rigaOrdine.getAlfanumRiservatoUtente2());
-					docAcqRigPrm.setNumeroRiservatoUtente1(rigaOrdine.getNumeroRiservatoUtente1());
-					docAcqRigPrm.setNumeroRiservatoUtente2(rigaOrdine.getNumeroRiservatoUtente2());
-					docAcqRigPrm.setCostoUnitario(rigaOrdine.getCostoUnitario());
-					PersDatiVen pdv = PersDatiVen.getCurrentPersDatiVen();
-					if (pdv.getTipoCostoRiferimento() == TipoCostoRiferimento.COSTO_ULTIMO){
-						GestoreCalcoloCosti gesCalcoloCosti = (GestoreCalcoloCosti)Factory.createObject(GestoreCalcoloCosti.class);
-						gesCalcoloCosti.initialize(rigaOrdine.getIdAzienda(), rigaOrdine.getIdArticolo(), rigaOrdine.getIdVersioneSal(),
-								rigaOrdine.getIdConfigurazione(), rigaOrdine.getIdMagazzino());
-						gesCalcoloCosti.impostaCostoUnitario();
-						docAcqRigPrm.setCostoUnitario(gesCalcoloCosti.getCostoUnitario());
-					}
-					if (rigaOrdine.getRigaPrezziExtra() != null) {
-						docAcqRigPrm.istanziaRigaPrezziExtra();
-						if (docAcqRigPrm.getRigaPrezziExtra() != null) {
-							DocRigaPrezziExtraVendita rigaPrezzi = (DocRigaPrezziExtraVendita)docAcqRigPrm.getRigaPrezziExtra();
-							DocOrdRigaPrezziExtra rigaPrezziOrd = rigaOrdine.getRigaPrezziExtra();
-							rigaPrezzi.setAnnoContrattoMateriaPrima(rigaPrezziOrd.getAnnoContrattoMateriaPrima());
-							rigaPrezzi.setIdAzienda(rigaPrezziOrd.getIdAzienda());
-							rigaPrezzi.setIdRigaCondizione(rigaPrezziOrd.getIdRigaCondizione());
-							rigaPrezzi.setIdSchemaPrezzo(rigaPrezziOrd.getIdSchemaPrezzo());
-							rigaPrezzi.setNumContrattoMateriaPrima(rigaPrezziOrd.getNumContrattoMateriaPrima());
-							rigaPrezzi.setRAnnoCantiere(((OrdineRigaPrezziExtraVendita)rigaPrezziOrd).getRAnnoCantiere());
-							rigaPrezzi.setRNumeroCantiere(((OrdineRigaPrezziExtraVendita)rigaPrezziOrd).getRNumeroCantiere());
-							rigaPrezzi.setRRigaCantiere(((OrdineRigaPrezziExtraVendita)rigaPrezziOrd).getRRigaCantiere());
-							rigaPrezzi.setPrezzoRiferimento(((OrdineRigaPrezziExtraVendita)rigaPrezziOrd).getPrezzoRiferimento());
-							try {
-								rigaPrezzi.getPrezziExtra().setEqual(rigaPrezziOrd.getPrezziExtra());
-							}
-							catch (Exception ex) {
-								ex.printStackTrace();
-							}
-							rigaPrezzi.setRigaOrdine(rigaOrdine);
-							rigaPrezzi.setIdDetRigaOrdine(rigaOrdine.getDettaglioRigaDocumento());
-						}
-					}
-					if (docAcqRigPrm.getRigaOrdine() != null) {
-						OrdineAcquisto ordVen = (OrdineAcquisto)docAcqRigPrm.getRigaOrdine().getTestata();
-						if (ordVen.getTipoEvasioneOrdine() == OrdineTestata.SALDO_AUTOMATICO) {
-							docAcqRigPrm.setRigaSaldata(true);
-						}
-					}
-					docAcqRigPrm.setPrezzoNetto(rigaOrdine.getPrezzoNetto());
-				}
-			}
-		}catch(Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * DSSOF3	70687	04/10/2022	Aggiorno i riferimenti al DocumentoAcquisto nella riga uds acquisto.
-	 * @param udsAcqRig
-	 * @param docAcqRigPrm
-	 */
-	public void aggiornaRiferimentiDocumentoAcquistoRigaUds(YUdsAcqRig udsAcqRig, DocumentoAcqRigaPrm docAcqRigPrm) {
-		udsAcqRig.setRAnnoDocAcq(docAcqRigPrm.getTestata().getAnnoDocumento());
-		udsAcqRig.setDocumentoAcquisto((DocumentoAcquisto) docAcqRigPrm.getTestata());
-		udsAcqRig.setRNumDocAcq(docAcqRigPrm.getTestata().getNumeroDocumento());
-		udsAcqRig.setRRigaDocAcq(docAcqRigPrm.getSequenzaRiga());
-		if(docAcqRigPrm.getDettaglioRigaDocumento() == null) {
-			udsAcqRig.setRRigaDetDocAcq(docAcqRigPrm.getDettaglioRigaDocumento());
-		}
-	}
-
-	public void aggiornaRiferimentiOrdineAcquistoRigaUds(YUdsAcqRig udsAcqRig, OrdineAcquistoRigaPrm ordAcqRig) {
-		udsAcqRig.setOrdineAcquistoRiga(ordAcqRig);
-		if(ordAcqRig.getDettaglioRigaDocumento() == null) {
-			udsAcqRig.setRRigaOrdAcq(ordAcqRig.getDettaglioRigaDocumento());
-		}
-	}
-
-	/**
-	 * DSSOF3	70687	04/10/2022	Aggiorno i riferimenti al DocumentoAcquisto in testata uds acquisto.
-	 * @param udsAcqTes
-	 * @param docAcqTes
-	 */
-	public void aggiornaRiferimentiDocumentoAcquistoTestataUds(YUdsAcquisto udsAcqTes, DocumentoAcquisto docAcqTes) {
-		udsAcqTes.setRAnnoDocAcq(docAcqTes.getAnnoDocumento());
-		udsAcqTes.setRNumDocAcq(docAcqTes.getNumeroDocumento());
-	}
 }

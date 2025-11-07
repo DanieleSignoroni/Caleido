@@ -1,0 +1,258 @@
+<html>
+<head>
+<!-- <meta charset="UTF-8"></meta>  -->
+</head>
+<body style="margin: 0px; overflow: hidden;">
+	<form name="YUdsAcqRigForm">
+		<table height="100%" width="100%" cellspacing="0" cellpadding="0"
+			id="emptyborder">
+			<tr>
+				<td style="height: 0"><span class="menubar" id="myMenuBar" /></td>
+			</tr>
+			<tr>
+				<td style="height: 0"><span class="toolbar" id="myToolBar" /></td>
+			</tr>
+			<tr>
+				<td><input type="hidden" name="IdUds" id="IdUds" /></td>
+			</tr>
+<!-- 			<tr> -->
+<!-- 				<td><input type="hidden" name="IdRigaUds" id="IdRigaUds" /></td> -->
+<!-- 			</tr> -->
+			<tr>
+				<td><span class="tabbed" id="mytabbed"> <span
+						class="tab" id="tab1">
+							<table style="width: 100%;">
+							<tr>
+									<td valign="top"><label>Sequenza</label></td>
+									<td valign="top"><input id="IdRigaUds" name="IdRigaUds"></input></td>
+								</tr>
+								<tr>
+									<td valign="top"><label for="RelArticolo"></label></td>
+									<td valign="top"><span class="multisearchform"
+										id="RelArticolo"></span></td>
+								</tr>
+								<tr>
+									<td valign="top"><label for="RelVersione"></label></td>
+									<td valign="top"><span class="multisearchform"
+										id="RelVersione"></span></td>
+								</tr>
+								<tr>
+									<td valign="top"><label for="RelConfigurazione"></label></td>
+									<td valign="top"><span class="multisearchform"
+										id="RelConfigurazione"></span></td>
+								</tr>
+								<tr>
+									<td valign="top"><label for="RelLotto"></label></td>
+									<td valign="top"><span class="multisearchform"
+										id="RelLotto"></span></td>
+								</tr>
+							</table>
+							<table style="width: 100%" name="Mis">
+								<tr>
+									<td>
+										<fieldset style="width: 25%; display: inline-block">
+											<legend> Misure </legend>
+											<table>
+												<tr>
+													<td valign="top"><label for="PesoNetto"></label></td>
+													<td valign="top"><input id="PesoNetto"
+														name="PesoNetto"></input></td>
+												</tr>
+												<tr>
+													<td valign="top"><label for="PesoLordo"></label></td>
+													<td valign="top"><input id="PesoLordo"
+														name="PesoLordo"></input></td>
+												</tr>
+												<tr>
+													<td valign="top"><label for="Volume"></label></td>
+													<td valign="top"><input id="Volume" name="Volume"></input>
+													</td>
+												</tr>
+												<tr>
+													<td valign="top"><label for="Altezza"></label></td>
+													<td valign="top"><input id="Altezza" name="Altezza"></input>
+													</td>
+												</tr>
+												<tr>
+													<td valign="top"><label for="Lunghezza"></label></td>
+													<td valign="top"><input id="Lunghezza"
+														name="Lunghezza"></input></td>
+												</tr>
+												<tr>
+													<td valign="top"><label for="Larghezza"></label></td>
+													<td valign="top"><input id="Larghezza"
+														name="Larghezza"></input></td>
+												</tr>
+											</table>
+										</fieldset>
+										<fieldset style="width: 25%; display: inline-block">
+											<legend> Quantita </legend>
+											<table>
+												<tr>
+													<td valign="top"><label for="QtaPrm"></label></td>
+													<td valign="top"><input id="QtaPrm" name="QtaPrm"></input>
+													</td>
+												</tr>
+												<tr>
+													<td valign="top"><label for="QtaSec"></label></td>
+													<td valign="top"><input id="QtaSec" name="QtaSec"></input>
+													</td>
+												</tr>
+												<tr>
+													<td valign="top"><label for="QtaAcq"></label></td>
+													<td valign="top"><input id="QtaAcq" name="QtaAcq"></input>
+													</td>
+												</tr>
+												<tr>
+													<td><br></br></td>
+												</tr>
+
+												<tr>
+													<td><br></br></td>
+												</tr>
+
+												<tr>
+													<td><br></br></td>
+												</tr>
+											</table>
+										</fieldset>
+
+									</td>
+								</tr>
+							</table>
+							<table>
+								<tr>
+									<td valign="top"><label for="Note"></label></td>
+									<td valign="top"><textarea id="Note" name="Note" cols="60"
+											rows="5"></textarea></td>
+								</tr>
+								<tr>
+									<td valign="top"><span class="subform"
+										id="DatiComuniEstesi"></span></td>
+									<td valign="top"></td>
+								</tr>
+								<tr>
+									<td valign="top"><label for="StatoEvasione"></label></td>
+									<td valign="top"><select name="StatoEvasione"
+										id="StatoEvasione"></select></td>
+								</tr>
+							</table>
+					</span> <span class="tab" id="tab2">
+							<table>
+								<tr>
+									<td>
+										<fieldset style="width: 100%; height: 100%">
+											<legend>Fornitore</legend>
+											<table>
+												<tr>
+													<td valign="top"><span class="multisearchform"
+														id="RelFornitore"></span></td>
+												</tr>
+											</table>
+										</fieldset>
+									</td>
+								</tr>
+							</table>
+							<table>
+								<tr>
+									<td>
+										<fieldset style="width: 100%; height: 100%">
+											<legend>Ordine Produzione</legend>
+											<table>
+
+												<tr>
+													<td valign="top"><label>Anno/Numero</label></td>
+													<td valign="top"><span class="multisearchform"
+														id="RelOrdPrd"></span></td>
+												</tr>
+											</table>
+										</fieldset>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<fieldset style="width: 100%; height: 100%">
+											<legend>Ordine Vendita</legend>
+											<table>
+
+												<tr>
+													<td valign="top"><label>Anno/Numero</label></td>
+													<td valign="top"><span class="multisearchform"
+														id="RelOrdineVendita"></span></td>
+												</tr>
+												<tr>
+													<td valign="top"><label>Riga</label></td>
+													<td valign="top"><span class="multisearchform"
+														id="RelOrdineVenditaRiga"></span></td>
+												</tr>
+											</table>
+										</fieldset>
+									</td>
+								</tr>
+
+							</table>
+							<table>
+								<tr>
+									<td>
+										<fieldset style="width: 100%; height: 100%">
+											<legend> Ordine Fornitore </legend>
+											<table>
+												<tr>
+													<td valign="top"><label>Anno/Numero</label></td>
+													<td valign="top"><span class="multisearchform"
+														id="RelOrdineAcquisto"></span></td>
+												</tr>
+												<tr>
+													<td valign="top"><label>Riga</label></td>
+													<td valign="top"><span class="multisearchform"
+														id="RelOrdineAcquistoRiga"></span></td>
+												</tr>
+												<tr>
+													<td valign="top"><label>Dettaglio</label></td>
+													<td valign="top"><span class="multisearchform"
+														id="RelOrdineAcquistoRigaSec"></span></td>
+												</tr>
+												<tr>
+													<td valign="top"><label>Causale</label></td>
+													<td valign="top"><span class="multisearchform"
+														id="RelCausaleRigaOrdAcq"></span></td>
+												</tr>
+											</table>
+										</fieldset>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<fieldset style="width: 100%; height: 100%">
+											<legend> Documento Acquisto </legend>
+											<table>
+												<tr>
+													<td valign="top"><label>Anno/Numero</label></td>
+													<td valign="top"><span class="multisearchform"
+														id="RelDocumentoAcquisto"></span></td>
+												</tr>
+												<tr>
+													<td valign="top"><label>Riga</label></td>
+													<td valign="top"><span class="multisearchform"
+														id="RelDocumentoAcqRiga"></span></td>
+												</tr>
+												<tr>
+													<td valign="top"><label>Dettaglio</label></td>
+													<td valign="top"><span class="multisearchform"
+														id="RelDocumentoAcqRigaSec"></span></td>
+												</tr>
+											</table>
+										</fieldset>
+									</td>
+								</tr>
+							</table>
+					</span>
+				</span></td>
+			</tr>
+			<tr>
+				<td style="height: 0"><span class="errorlist" /></td>
+			</tr>
+		</table>
+	</form>
+</body>
+</html>

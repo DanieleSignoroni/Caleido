@@ -582,6 +582,7 @@ public abstract class YUdsAcquistoPO extends EntitaAzienda implements BusinessOb
 
 	public void setOrdineAcquisto(OrdineAcquisto OrdineAcquisto){
 		iRelOrdineAcquisto.setObject(OrdineAcquisto);
+		setDirty();
 	}
 
 	public String getOrdineAcquistoKey(){

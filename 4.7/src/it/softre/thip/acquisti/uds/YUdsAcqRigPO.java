@@ -74,19 +74,19 @@ public abstract class YUdsAcqRigPO extends EntitaAzienda implements BusinessObje
 	protected Integer iRRigaDetDocAcq;
 
 	protected Integer iRRigaDetOrdAcq;
-	
+
 	protected Integer iRRigaOrdVen;
 
 	protected Integer iRRigaDocAcq;
-	
+
 	protected Integer iRRigaOrdAcq;
-	
+
 	protected String iRAnnoOrdVen;
 
 	protected String iRNumeroOrdVen;
-	
+
 	protected BigDecimal iVolume;
-	
+
 	protected String iUdsPadre;
 
 	protected char iStatoEvasione = '0';
@@ -112,15 +112,15 @@ public abstract class YUdsAcqRigPO extends EntitaAzienda implements BusinessObje
 	protected Proxy iRelDocumentoAcqRigaSec = new Proxy(it.thera.thip.acquisti.documentoAC.DocumentoAcqRigaSec.class);
 
 	protected Proxy iRelCausaleRigaOrdAcq = new Proxy(it.thera.thip.acquisti.generaleAC.CausaleOrdineRigaAcq.class);
-	
+
 	protected Proxy iRelFornitore = new Proxy(it.thera.thip.base.fornitore.FornitoreAcquisto.class);
-	
+
 	protected Proxy iRelOrdineVendita = new Proxy(it.thera.thip.vendite.ordineVE.OrdineVendita.class);
-	
+
 	protected Proxy iRelOrdineVenditaRiga = new Proxy(it.thera.thip.vendite.ordineVE.OrdineVenditaRigaPrm.class);
-	
+
 	protected ConfigurazioneProxyEnh iRelConfigurazione = new ConfigurazioneProxyEnh(Configurazione.class);
-	
+
 	protected Proxy iParent = new Proxy(it.softre.thip.acquisti.uds.YUdsAcquisto.class);
 
 	@SuppressWarnings("rawtypes")
@@ -206,7 +206,7 @@ public abstract class YUdsAcqRigPO extends EntitaAzienda implements BusinessObje
 		this.iPesoLordo = pesoLordo;
 		setDirty();
 	}
-	
+
 	public BigDecimal getPesoLordo() {
 		return iPesoLordo;
 	}
@@ -257,15 +257,6 @@ public abstract class YUdsAcqRigPO extends EntitaAzienda implements BusinessObje
 		return iRAnnoDocAcq;
 	}
 
-	public void setRAnnoOrdAcq(String rAnnoOrdAcq) {
-		this.iRAnnoOrdAcq = rAnnoOrdAcq;
-		setDirty();
-	}
-
-	public String getRAnnoOrdAcq() {
-		return iRAnnoOrdAcq;
-	}
-
 	public void setRCauOrdAcqRig(String rCauOrdAcqRig) {
 		this.iRCauOrdAcqRig = rCauOrdAcqRig;
 		setDirty();
@@ -293,20 +284,11 @@ public abstract class YUdsAcqRigPO extends EntitaAzienda implements BusinessObje
 		return iRNumDocAcq;
 	}
 
-	public void setRNumOrdAcq(String rNumOrdAcq) {
-		this.iRNumOrdAcq = rNumOrdAcq;
-		setDirty();
-	}
-
-	public String getRNumOrdAcq() {
-		return iRNumOrdAcq;
-	}
-
 	public void setRRigaDetDocAcq(Integer rRigaDetDocAcq) {
 		this.iRRigaDetDocAcq = rRigaDetDocAcq;
 		setDirty();
 	}
-	
+
 	public Integer getRRigaOrdVen() {
 		return iRRigaOrdVen;
 	}
@@ -336,16 +318,47 @@ public abstract class YUdsAcqRigPO extends EntitaAzienda implements BusinessObje
 	public Integer getRRigaDocAcq() {
 		return iRRigaDocAcq;
 	}
+	
+	//---------- Proxy OrdineAcquistoRiga -------------------->
+
+	public void setRNumOrdAcq(String rNumOrdAcq) {
+		String key = iRelOrdineAcquistoRiga.getKey();
+		iRelOrdineAcquistoRiga.setKey(KeyHelper.replaceTokenObjectKey(key, 3, rNumOrdAcq));
+		setDirty();
+	}
+
+	public String getRNumOrdAcq() {
+		String key = iRelOrdineAcquistoRiga.getKey();
+		String idRigaOrdIC = KeyHelper.getTokenObjectKey(key, 3);
+		return idRigaOrdIC;
+	}
+
+	public void setRAnnoOrdAcq(String rAnnoOrdAcq) {
+		String key = iRelOrdineAcquistoRiga.getKey();
+		iRelOrdineAcquistoRiga.setKey(KeyHelper.replaceTokenObjectKey(key, 2, rAnnoOrdAcq));
+		setDirty();
+	}
+
+	public String getRAnnoOrdAcq() {
+		String key = iRelOrdineAcquistoRiga.getKey();
+		String idRigaOrdIC = KeyHelper.getTokenObjectKey(key, 2);
+		return idRigaOrdIC;
+	}
 
 	public void setRRigaOrdAcq(Integer rRigaOrdAcq) {
-		this.iRRigaOrdAcq = rRigaOrdAcq;
+		String key = iRelOrdineAcquistoRiga.getKey();
+		iRelOrdineAcquistoRiga.setKey(KeyHelper.replaceTokenObjectKey(key, 4, rRigaOrdAcq));
 		setDirty();
 	}
 
 	public Integer getRRigaOrdAcq() {
-		return iRRigaOrdAcq;
+		String key = iRelOrdineAcquistoRiga.getKey();
+		String idRigaOrdIC = KeyHelper.getTokenObjectKey(key, 4);
+		return KeyHelper.stringToIntegerObj(idRigaOrdIC);
 	}
 	
+	//<---------- Proxy OrdineAcquistoRiga --------------------
+
 	public void setVolume(BigDecimal volume) {
 		this.iVolume = volume;
 		setDirty();
@@ -417,7 +430,7 @@ public abstract class YUdsAcqRigPO extends EntitaAzienda implements BusinessObje
 	public ArticoloVersione getRelversione() {
 		return (ArticoloVersione)iRelversione.getObject();
 	}
-	
+
 	public void setRelversioneKey(String key) {
 		String oldObjectKey = getKey();
 		iRelversione.setKey(key);
@@ -482,7 +495,7 @@ public abstract class YUdsAcqRigPO extends EntitaAzienda implements BusinessObje
 			setOnDB(false);
 		}
 	}
-	
+
 	public String getRellottoKey() {
 		return iRellotto.getKey();
 	}
@@ -833,7 +846,7 @@ public abstract class YUdsAcqRigPO extends EntitaAzienda implements BusinessObje
 		iRelDocumentoAcqRiga.setKey(key);
 		setDirty();
 	}
-	
+
 	public DocumentoAcqRigaSec getDocumentoAcquistoRigaSec() {
 		return (DocumentoAcqRigaSec) iRelDocumentoAcqRigaSec.getObject();
 	}
@@ -869,7 +882,7 @@ public abstract class YUdsAcqRigPO extends EntitaAzienda implements BusinessObje
 	public void setiRelFornitore(Proxy iRelFornitore) {
 		this.iRelFornitore = iRelFornitore;
 	}
-	
+
 	public void setStatoEvasione(char statoEvasione) {
 		this.iStatoEvasione = statoEvasione;
 		setDirty();
@@ -878,7 +891,7 @@ public abstract class YUdsAcqRigPO extends EntitaAzienda implements BusinessObje
 	public char getStatoEvasione() {
 		return iStatoEvasione;
 	}
-	
+
 	public void setUdsPadre(String udsPadre) {
 		this.iUdsPadre = udsPadre;
 		setDirty();
@@ -923,7 +936,7 @@ public abstract class YUdsAcqRigPO extends EntitaAzienda implements BusinessObje
 				);
 		setDirty();
 	}
-	
+
 	public String getRAnnoOrdVen() {
 		return iRAnnoOrdVen;
 	}
@@ -939,7 +952,7 @@ public abstract class YUdsAcqRigPO extends EntitaAzienda implements BusinessObje
 	public void setRNumeroOrdVen(String iRNumeroOrdVen) {
 		this.iRNumeroOrdVen = iRNumeroOrdVen;
 	}
-	
+
 	public void setOrdineVendita(OrdineVendita ordineVendita) {
 		String oldObjectKey = getKey();
 		String idAzienda = null;
@@ -972,7 +985,7 @@ public abstract class YUdsAcqRigPO extends EntitaAzienda implements BusinessObje
 	public String getOrdineVenditaKey() {
 		return iRelOrdineVendita.getKey();
 	}
-	
+
 	public void setOrdineVenditaRiga(OrdineVenditaRiga ordineVenditaRiga) {
 		String oldObjectKey = getKey();
 		String idAzienda = null;
