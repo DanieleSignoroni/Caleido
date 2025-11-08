@@ -117,11 +117,10 @@ public class YEvasioneUdsAcquisto extends DocumentoCambiaJSP{
 			if(em != null) {
 				se.addErrorMessage(em);
 			}
-			checkChiavi(chiaviSel,se);
 			if(se.isErrorListEmpity()) {
 				it.softre.thip.acquisti.uds.YEvasioneUdsAcquisto udsAcqBO = null;
 				udsAcqBO = (it.softre.thip.acquisti.uds.YEvasioneUdsAcquisto) docBODC.getBo();
-				completaEvasione(udsAcqBO,se);
+				udsAcqBO.setRFornitore(fornitore);
 				docBODC.setBo(udsAcqBO);
 				YDatiSessioneEvasioneUdsAcquisto datiSessioneEvasione = (YDatiSessioneEvasioneUdsAcquisto) Factory.createObject(YDatiSessioneEvasioneUdsAcquisto.class);
 				datiSessioneEvasione.setDocumentoBO(docBODC.getBo());
@@ -188,30 +187,6 @@ public class YEvasioneUdsAcquisto extends DocumentoCambiaJSP{
 		return null;
 	}
 
-	private void completaEvasione(it.softre.thip.acquisti.uds.YEvasioneUdsAcquisto udsAcqBO, ServletEnvironment se) {
-		String chiaviSel[] = (String[]) se.getRequest().getAttribute("ChiaviSelEvasioneUdsAcquisto");
-		String fornitore = getFornitore(chiaviSel[0]);
-		udsAcqBO.setRFornitore(fornitore);
-	}
-
-	private boolean checkChiavi(String[] chiaviSel, ServletEnvironment se) {
-		try {
-			for(int i = 0 ; i < chiaviSel.length; i++) {
-				YUdsAcquisto udsAcq = (YUdsAcquisto)
-						YUdsAcquisto.elementWithKey(YUdsAcquisto.class, chiaviSel[i], 0);
-				if(udsAcq.getRigheUDSAcquisti().size() == 0) {
-					ErrorMessage em = new ErrorMessage("YSOFTRE001","L'UDS " + chiaviSel[i] + " non ha righe, non puo' essere evasa");
-					se.addErrorMessage(em);
-				}
-			}
-		}catch (SQLException e) {
-			e.printStackTrace(Trace.excStream);
-		}
-		return false;
-	}
-
-
-
 	public void executeJSOpenAction(ServletEnvironment se, String url, DocumentoDataCollector docBODC) {
 		try {
 			PrintWriter out = se.getResponse().getWriter();
@@ -241,25 +216,5 @@ public class YEvasioneUdsAcquisto extends DocumentoCambiaJSP{
 		catch (Exception ex) {
 			ex.printStackTrace(Trace.excStream);
 		}
-	}
-
-	public String getMsgEvasione(ArrayList<String> chiaviGiaEvase) {
-		String ret = "";
-		for(int i = 0; i < chiaviGiaEvase.size(); i++) {
-			ret += " - " + chiaviGiaEvase.get(i) + " \n";
-		}
-		return ret;
-	}
-
-	public String getFornitore(String chiave) {
-		try {
-			YUdsAcquisto uds = (YUdsAcquisto) YUdsAcquisto.elementWithKey(YUdsAcquisto.class, chiave,0);
-			if(uds != null) {
-				return uds.getIdFornitore();
-			}
-		}catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
 	}
 }

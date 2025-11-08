@@ -452,6 +452,8 @@ public class YCaleidoEvasioneUdsAcquisto extends BusinessObjectAdapter {
 				ordAcqRig.setNumeroOrdineCliente(oe.getNumeroOrdineCliente());
 				ordAcqRig.setRigaOrdineCliente(oe.getRigaOrdineCliente());
 			}*/
+		}else {
+			throw new ThipException("Nessuna configurazione trovata per l'articolo "+articolo.getIdArticolo()+", codice esterno configurazione "+idEsternoConfig);
 		}
 		return ordAcqRig;
 	}

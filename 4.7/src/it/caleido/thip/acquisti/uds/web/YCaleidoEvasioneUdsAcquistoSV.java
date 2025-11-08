@@ -14,10 +14,10 @@ import com.thera.thermfw.base.Trace;
 import com.thera.thermfw.collector.BODataCollector;
 import com.thera.thermfw.common.ErrorMessage;
 import com.thera.thermfw.persist.Factory;
+import com.thera.thermfw.persist.PersistentObject;
 import com.thera.thermfw.web.ServletEnvironment;
 
 import it.caleido.thip.acquisti.uds.YCaleidoEvasioneUdsAcquisto;
-import it.softre.thip.acquisti.uds.YAlertUdsAcquisto;
 import it.softre.thip.acquisti.uds.YUdsAcquisto;
 import it.softre.thip.vendite.uds.web.YUdsVenditaGridActionAdapter;
 import it.thera.thip.base.documenti.web.DocumentoCambiaJSP;
@@ -98,49 +98,88 @@ public class YCaleidoEvasioneUdsAcquistoSV extends DocumentoCambiaJSP{
 		String className = se.getRequest().getParameter(CLASS_NAME);
 		docBODC.initialize(className, true, getCurrentLockType(se));
 		String chiaviSel[] = (String[]) se.getRequest().getAttribute("ChiaviSelEvasioneUdsAcquistoCaleido");
-		String fornitore = null;
+		List<YUdsAcquisto> list = recuperaUdsAcquistoDaChiavi(chiaviSel);
+		String fornitore = list.get(0).getIdFornitore();
 		if(chiaviSel != null) {
-			fornitore = getFornitore(chiaviSel[0]);
-			boolean isOk = YAlertUdsAcquisto.checkFornitore(chiaviSel);
-			if(isOk) {
-				ArrayList<String> chiaviUdsEvase = YAlertUdsAcquisto.chiaviUdsEvase(chiaviSel);
-				if(!chiaviUdsEvase.isEmpty()) {
-					ErrorMessage em = new ErrorMessage("YSOFTRE001","Le seguenti UDS sono già state evase " + getMsgEvasione(chiaviUdsEvase));
-					se.addErrorMessage(em);
-				}
+			ErrorMessage em = checkCongruenzaFornitore(list);
+			if(em != null) {
+				se.addErrorMessage(em);
+			}
+			em = checkUdsEvase(list,getAzione(se));
+			if(em != null) {
+				se.addErrorMessage(em);
+			}
+			em = checkPresenzaRigheUds(list);
+			if(em != null) {
+				se.addErrorMessage(em);
+			}
+			if(se.isErrorListEmpity()) {
+				YCaleidoEvasioneUdsAcquisto bo = null;
+				bo = (YCaleidoEvasioneUdsAcquisto) docBODC.getBo();
+				bo.setIdFornitore(fornitore);
+				docBODC.setBo(bo);
+				datiSessione = (DocumentoDatiSessione) Factory.createObject(DocumentoDatiSessione.class);
+				datiSessione.setDocumentoBO(docBODC.getBo());
+				datiSessione.setNavigatore(docBODC.getNavigatore());
+				datiSessione.setValoriChiaviDocumento(chiaviSel);
+				boolean daEstratto = (Boolean) se.getRequest().getAttribute("DaEstratto");
+				datiSessione.setSmartMode(daEstratto); //uso questo attributo per sapere se e' da estratto o no, per non fare la classe Y
+				datiSessione.salvaInSessione(se);
+				se.getRequest().setAttribute(DocumentoDataCollector.CARICA_DA_SESSIONE, "true");
+				String url = "it/caleido/thip/acquisti/uds/YCaleidoEvasioneUdsAcquisto.jsp?Fornitore="+fornitore;
+				String params = "&" + DocumentoDatiSessione.CHIAVE_DATI_SESSIONE + "=" +(String) se.getRequest().getAttribute(DocumentoDatiSessione.CHIAVE_DATI_SESSIONE);
+				url += params;
+				executeJSOpenAction(se, url, docBODC);
 			}else {
-				ErrorMessage em = new ErrorMessage("YSOFTRE001","Non e' possibile evadere UDS con clienti diversi");
-				se.addErrorMessage(em);
+				se.sendRequest(getServletContext(), "com/thera/thermfw/common/InfoAreaHandler.jsp", false);
 			}
-			if(fornitore == null) {
-				ErrorMessage em = new ErrorMessage("YSOFTRE001","Non e' possibile evadere UDS senza cliente");
-				se.addErrorMessage(em);
+		}
+	} 
+
+	public ErrorMessage checkPresenzaRigheUds(List<YUdsAcquisto> list) {
+		for(YUdsAcquisto uds : list) {
+			if(uds.getRigheUDSAcquisti().size() == 0) {
+				return  new ErrorMessage("YSOFTRE001","L'UDS " + uds.getKey() + " non ha righe, non puo' essere evasa");
 			}
-			checkChiavi(chiaviSel,se);
-		}else {
-			ErrorMessage em = new ErrorMessage("YSOFTRE001","Non e' stata selezionata nessuna UDS");
-			se.addErrorMessage(em);
 		}
-		if(se.isErrorListEmpity()) {
-			YCaleidoEvasioneUdsAcquisto bo = null;
-			bo = (YCaleidoEvasioneUdsAcquisto) docBODC.getBo();
-			bo.setIdFornitore(fornitore);
-			docBODC.setBo(bo);
-			datiSessione = (DocumentoDatiSessione) Factory.createObject(DocumentoDatiSessione.class);
-			datiSessione.setDocumentoBO(docBODC.getBo());
-			datiSessione.setNavigatore(docBODC.getNavigatore());
-			datiSessione.setValoriChiaviDocumento(chiaviSel);
-			boolean daEstratto = (Boolean) se.getRequest().getAttribute("DaEstratto");
-			datiSessione.setSmartMode(daEstratto); //uso questo attributo per sapere se e' da estratto o no, per non fare la classe Y
-			datiSessione.salvaInSessione(se);
-			se.getRequest().setAttribute(DocumentoDataCollector.CARICA_DA_SESSIONE, "true");
-			String url = "it/caleido/thip/acquisti/uds/YCaleidoEvasioneUdsAcquisto.jsp?Fornitore="+fornitore;
-			String params = "&" + DocumentoDatiSessione.CHIAVE_DATI_SESSIONE + "=" +(String) se.getRequest().getAttribute(DocumentoDatiSessione.CHIAVE_DATI_SESSIONE);
-			url += params;
-			executeJSOpenAction(se, url, docBODC);
-		}else {
-			se.sendRequest(getServletContext(), "com/thera/thermfw/common/InfoAreaHandler.jsp", false);
+		return null;
+	}
+
+	public ErrorMessage checkCongruenzaFornitore(List<YUdsAcquisto> list) {
+		if(list.size() == 0)
+			return new ErrorMessage("BAS0000000");
+		String firstForn = list.get(0).getIdFornitore();
+		if(firstForn == null)
+			return new ErrorMessage("BAS0000000");
+		for(YUdsAcquisto uds : list) {
+			if(uds.getIdFornitore() == null) {
+				return new ErrorMessage("BAS0000000");
+			}else if(!uds.getIdFornitore().equals(firstForn)){
+				return new ErrorMessage("YSOFTRE001","Non e' possibile evadere UDS con fornitori diversi");
+			}
 		}
+		return null;
+	}
+
+	public List<YUdsAcquisto> recuperaUdsAcquistoDaChiavi(String[] keys){
+		List<YUdsAcquisto> list = new ArrayList<YUdsAcquisto>();
+		for(String key : keys) {
+			try {
+				list.add((YUdsAcquisto) YUdsAcquisto.elementWithKey(YUdsAcquisto.class, key, PersistentObject.NO_LOCK));
+			} catch (SQLException e) {
+				e.printStackTrace(Trace.excStream);
+			}
+		}
+		return list;
+	}
+
+	public ErrorMessage checkUdsEvase(List<YUdsAcquisto> list, String azione) {
+		for(YUdsAcquisto uds : list) {
+			if(uds.getRAnnoOrdAcq() != null && uds.getRNumOrdAcq() != null) {
+				return new ErrorMessage("YSOFTRE001","Non e' possibile evadere un UDS gia' evasa");
+			}
+		}
+		return null;
 	}
 
 	public void executeJSOpenAction(ServletEnvironment se, String url, DocumentoDataCollector docBODC) {
@@ -182,31 +221,4 @@ public class YCaleidoEvasioneUdsAcquistoSV extends DocumentoCambiaJSP{
 		return ret;
 	}
 
-	private boolean checkChiavi(String[] chiaviSel, ServletEnvironment se) {
-		try {
-			for(int i = 0 ; i < chiaviSel.length; i++) {
-				YUdsAcquisto udsAcq = (YUdsAcquisto)
-						YUdsAcquisto.elementWithKey(YUdsAcquisto.class, chiaviSel[i], 0);
-				if(udsAcq.getRigheUDSAcquisti().size() == 0) {
-					ErrorMessage em = new ErrorMessage("YSOFTRE001","L'UDS " + chiaviSel[i] + " non ha righe, non puo' essere evasa");
-					se.addErrorMessage(em);
-				}
-			}
-		}catch (SQLException e) {
-			e.printStackTrace(Trace.excStream);
-		}
-		return false;
-	}
-
-	public String getFornitore(String chiave) {
-		try {
-			YUdsAcquisto uds = (YUdsAcquisto) YUdsAcquisto.elementWithKey(YUdsAcquisto.class, chiave,0);
-			if(uds != null) {
-				return uds.getIdFornitore();
-			}
-		}catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
 }
