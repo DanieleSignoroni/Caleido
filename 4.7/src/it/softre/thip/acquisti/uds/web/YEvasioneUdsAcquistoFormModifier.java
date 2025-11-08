@@ -6,8 +6,6 @@ import javax.servlet.jsp.JspWriter;
 
 
 import it.softre.thip.acquisti.uds.YEvasioneUdsAcquisto;
-import it.thera.thip.acquisti.generaleAC.CausaleDocumentoTestataAcq;
-import it.thera.thip.acquisti.generaleAC.CausaleOrdineTestataAcq;
 import it.thera.thip.base.documenti.web.DocumentoAbsFormModifier;
 
 /**

@@ -27,6 +27,7 @@ import it.thera.thip.acquisti.documentoAC.DocumentoAcqRigaPrm;
 import it.thera.thip.acquisti.documentoAC.DocumentoAcquisto;
 import it.thera.thip.acquisti.documentoAC.web.DocumentoAcquistoDataCollector;
 import it.thera.thip.acquisti.generaleAC.CausaleDocumentoTestataAcq;
+import it.thera.thip.acquisti.ordineAC.OrdineAcquisto;
 import it.thera.thip.acquisti.ordineAC.OrdineAcquistoRigaPrm;
 import it.thera.thip.base.articolo.Articolo;
 import it.thera.thip.base.articolo.ArticoloVersione;
@@ -37,14 +38,13 @@ import it.thera.thip.base.comuniVenAcq.TipoCostoRiferimento;
 import it.thera.thip.base.comuniVenAcq.TipoRiga;
 import it.thera.thip.base.comuniVenAcq.web.CalcoloQuantitaWeb;
 import it.thera.thip.base.comuniVenAcq.web.CalcoloQuantitaWrapper;
-import it.thera.thip.base.fornitore.Fornitore;
+import it.thera.thip.base.fornitore.FornitoreAcquisto;
 import it.thera.thip.base.generale.Numeratore;
 import it.thera.thip.base.generale.Serie;
 import it.thera.thip.base.generale.UnitaMisura;
 import it.thera.thip.base.prezziExtra.DocOrdRigaPrezziExtra;
 import it.thera.thip.vendite.generaleVE.PersDatiVen;
 import it.thera.thip.vendite.ordineVE.GestoreEvasioneVendita;
-import it.thera.thip.vendite.ordineVE.OrdineVenditaTestata;
 import it.thera.thip.vendite.prezziExtra.DocRigaPrezziExtraVendita;
 import it.thera.thip.vendite.prezziExtra.OrdineRigaPrezziExtraVendita;
 
@@ -170,10 +170,13 @@ public class YEvasioneUdsAcquisto implements BusinessObject{
 	}
 
 	public String getRFornitore() {
-		return iRFornitore;
+		String key = iRelFornitore.getKey();
+		String objRCliente = KeyHelper.getTokenObjectKey(key,2);
+		return objRCliente;
 	}
 	public void setRFornitore(String iRFornitore) {
-		this.iRFornitore = iRFornitore;
+		String key = iRelFornitore.getKey();
+		iRelFornitore.setKey(KeyHelper.replaceTokenObjectKey(key , 2, iRFornitore));
 	}
 
 	public CausaleDocumentoTestataAcq getCausale() {
@@ -202,13 +205,13 @@ public class YEvasioneUdsAcquisto implements BusinessObject{
 		return iRelSerie.getKey();
 	}
 
-	public void setFornitore(Fornitore fornitore){
+	public void setFornitore(FornitoreAcquisto fornitore){
 		iRelFornitore.setObject(fornitore);
 		setOnDB(false);
 	}
 
-	public Fornitore getFornitore(){
-		return (Fornitore) iRelFornitore.getObject();
+	public FornitoreAcquisto getFornitore(){
+		return (FornitoreAcquisto) iRelFornitore.getObject();
 	}
 
 	public void setFornitoreKey(String fornitoreKey){
@@ -219,7 +222,6 @@ public class YEvasioneUdsAcquisto implements BusinessObject{
 	public String getFornitoreKey(){
 		return iRelFornitore.getKey();
 	}
-
 
 	@Override
 	public String getKey() {
@@ -621,8 +623,8 @@ public class YEvasioneUdsAcquisto implements BusinessObject{
 						}
 					}
 					if (docAcqRigPrm.getRigaOrdine() != null) {
-						OrdineVenditaTestata ordVen = (OrdineVenditaTestata)docAcqRigPrm.getRigaOrdine().getTestata();
-						if (ordVen.getTipoEvasioneOrdine() == OrdineTestata.SALDO_AUTOMATICO) {
+						OrdineAcquisto ordAcq = (OrdineAcquisto)docAcqRigPrm.getRigaOrdine().getTestata();
+						if (ordAcq.getTipoEvasioneOrdine() == OrdineTestata.SALDO_AUTOMATICO) {
 							docAcqRigPrm.setRigaSaldata(true);
 						}
 					}
