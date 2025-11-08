@@ -10,12 +10,10 @@ import java.util.Vector;
 
 import com.thera.thermfw.base.Trace;
 import com.thera.thermfw.common.BaseComponentsCollection;
-import com.thera.thermfw.common.BusinessObject;
+import com.thera.thermfw.common.BusinessObjectAdapter;
 import com.thera.thermfw.common.ErrorList;
 import com.thera.thermfw.common.ErrorMessage;
 import com.thera.thermfw.persist.ConnectionManager;
-import com.thera.thermfw.persist.CopyException;
-import com.thera.thermfw.persist.Copyable;
 import com.thera.thermfw.persist.DB2NetDatabase;
 import com.thera.thermfw.persist.Factory;
 import com.thera.thermfw.persist.KeyHelper;
@@ -55,7 +53,7 @@ import it.thera.thip.vendite.prezziExtra.OrdineRigaPrezziExtraVendita;
  *					E contiene inoltre i metodi per eseguire l'evasione.
  */
 
-public class YEvasioneUdsAcquisto implements BusinessObject{
+public class YEvasioneUdsAcquisto extends BusinessObjectAdapter {
 
 	protected String iIdAzienda;
 
@@ -223,21 +221,6 @@ public class YEvasioneUdsAcquisto implements BusinessObject{
 		return iRelFornitore.getKey();
 	}
 
-	@Override
-	public String getKey() {
-
-		return null;
-	}
-
-	@Override
-	public void setKey(String key) {
-
-	}
-
-	@Override
-	public void setEqual(Copyable obj) throws CopyException {
-	}
-
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public Vector checkAll(BaseComponentsCollection components) {
@@ -262,39 +245,10 @@ public class YEvasioneUdsAcquisto implements BusinessObject{
 				}
 			}
 		}catch (SQLException e) {
-			e.printStackTrace();
+			e.printStackTrace(Trace.excStream);
 		}
 		return em;
 	}
-
-	@Override
-	public int save() throws SQLException {
-		return 0;
-	}
-
-	@Override
-	public int save(boolean force) throws SQLException {
-		return 0;
-	}
-
-	@Override
-	public boolean retrieve(int lockType) throws SQLException {
-		return false;
-	}
-
-	@Override
-	public void setOnDB(boolean onDB) {
-
-	}
-
-	@Override
-	public void unlock() throws SQLException {
-	}
-
-	@Override
-	public void setObjQueryTimeout(int seconds) {
-	}
-
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static Object evasioneUdsAcquisto(String[] chiaviSel, Date data, String idCausale, String idSerie, String idCliente, Date dataRifIntestatarioDocAcq, String numeroRifIntestatario) {
@@ -350,7 +304,7 @@ public class YEvasioneUdsAcquisto implements BusinessObject{
 				}
 			}
 		}catch(Exception e ) {
-			e.printStackTrace();
+			e.printStackTrace(Trace.excStream);
 		}
 		ogg = new Object[]{errori,chiave};
 		return ogg;
@@ -440,7 +394,7 @@ public class YEvasioneUdsAcquisto implements BusinessObject{
 			BigDecimal qtaPrmMag = new BigDecimal(qtaPrmMagStr);
 			riga.getQtaAttesaEvasione().setQuantitaInUMRif(qtaPrmMag);
 		} catch (Exception e) {
-			e.printStackTrace();
+			e.printStackTrace(Trace.excStream);
 		}
 	}
 
@@ -616,7 +570,7 @@ public class YEvasioneUdsAcquisto implements BusinessObject{
 								rigaPrezzi.getPrezziExtra().setEqual(rigaPrezziOrd.getPrezziExtra());
 							}
 							catch (Exception ex) {
-								ex.printStackTrace();
+								ex.printStackTrace(Trace.excStream);
 							}
 							rigaPrezzi.setRigaOrdine(rigaOrdine);
 							rigaPrezzi.setIdDetRigaOrdine(rigaOrdine.getDettaglioRigaDocumento());
@@ -632,7 +586,7 @@ public class YEvasioneUdsAcquisto implements BusinessObject{
 				}
 			}
 		}catch(Exception e) {
-			e.printStackTrace();
+			e.printStackTrace(Trace.excStream);
 		}
 	}
 
@@ -679,7 +633,7 @@ public class YEvasioneUdsAcquisto implements BusinessObject{
 				dataOk = formatoDB2.format(formatoWeb.parse(data));
 			date = java.sql.Date.valueOf(dataOk);
 		} catch (ParseException e) {
-			e.printStackTrace();
+			e.printStackTrace(Trace.excStream);
 		}
 		return date;
 	}

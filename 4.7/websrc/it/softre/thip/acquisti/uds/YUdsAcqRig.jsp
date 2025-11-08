@@ -1,5 +1,5 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
-                      "file:///K:/Thip/4.7.0/websrcsvil/dtd/xhtml1-transitional.dtd">
+                      "file:///K:/Thip/5.0.0/websrcsvil/dtd/xhtml1-transitional.dtd">
 <html>
 <!-- WIZGEN Therm 2.0.0 as Form - multiBrowserGen = true -->
 <%=WebGenerator.writeRuntimeInfo()%>
@@ -532,16 +532,6 @@
   YUdsAcqRigRelOrdineAcquistoRigaSec.write(out); 
 %>
 <!--<span class="multisearchform" id="RelOrdineAcquistoRigaSec"></span>--></td>
-												</tr>
-												<tr>
-													<td valign="top"><label>Causale</label></td>
-													<td valign="top"><% 
-  WebMultiSearchForm YUdsAcqRigRelCausaleRigaOrdAcq =  
-     new com.thera.thermfw.web.WebMultiSearchForm("YUdsAcqRig", "RelCausaleRigaOrdAcq", false, false, true, 1, null, null); 
-  YUdsAcqRigRelCausaleRigaOrdAcq.setParent(YUdsAcqRigForm); 
-  YUdsAcqRigRelCausaleRigaOrdAcq.write(out); 
-%>
-<!--<span class="multisearchform" id="RelCausaleRigaOrdAcq"></span>--></td>
 												</tr>
 											</table>
 										</fieldset>
