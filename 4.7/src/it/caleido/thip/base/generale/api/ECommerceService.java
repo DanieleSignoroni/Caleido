@@ -3,8 +3,9 @@ package it.caleido.thip.base.generale.api;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.Hashtable;
 import java.util.NoSuchElementException;
+import java.util.Vector;
 
 import javax.ws.rs.core.Response.Status;
 
@@ -23,11 +24,19 @@ import com.thera.thermfw.persist.PersistentObject;
 import com.thera.thermfw.rs.errors.ErrorUtils;
 import com.thera.thermfw.rs.errors.PantheraApiException;
 
+import it.caleido.thip.base.articolo.YArticolo;
+import it.caleido.thip.base.articolo.YArticoloDatiTecnici;
+import it.caleido.thip.vendite.generaleVE.YModificaConfigurazioneRigaVendita;
 import it.thera.thip.base.articolo.Articolo;
 import it.thera.thip.base.azienda.Azienda;
 import it.thera.thip.cs.ColonneFiltri;
+import it.thera.thip.cs.DatiComuniEstesi;
+import it.thera.thip.datiTecnici.configuratore.Configurazione;
+import it.thera.thip.datiTecnici.configuratore.GestoreMacroConfigurazione;
+import it.thera.thip.datiTecnici.configuratore.MacroConfigurazione;
 import it.thera.thip.datiTecnici.configuratore.SchemaCfg;
 import it.thera.thip.datiTecnici.configuratore.ValoreVariabileCfg;
+import it.thera.thip.datiTecnici.configuratore.ValoreVariabileCfgTM;
 import it.thera.thip.datiTecnici.configuratore.VariabileSchemaCfg;
 
 /**
@@ -76,7 +85,7 @@ public class ECommerceService {
 				return buildResponse(Status.BAD_REQUEST, errors);
 			}
 
-			if (!bodyAsJSON.has("confVariables")) {
+			if (!bodyAsJSON.has("ConfVariables")) {
 				ErrorMessage err = new ErrorMessage("BAS0000078", "Indicare le variabili di configurazione");
 				errors.add(err);
 
@@ -111,8 +120,44 @@ public class ECommerceService {
 				return buildResponse(Status.BAD_REQUEST, errors);
 			}
 
-			String sintesiConfigGUI = costruisciSintesiConfigurazioneGUI(bodyAsJSON, articolo.getSchemaCfg());
+			String sintesiConfigGUI = costruisciSintesiConfigurazioneGUI(bodyAsJSON, articolo.getSchemaCfg(), articolo);
+			if(sintesiConfigGUI != null) {
+				BODataCollector boDCC = createDataCollector("Configurazione");
 
+				rc = boDCC.initSecurityServices(OpenType.NEW, true, true, true);
+
+				if (rc != BODataCollector.OK) {
+					errors.addAll(boDCArt.getErrorList().getErrors());
+					return buildResponse(Status.BAD_REQUEST, errors);
+				}
+
+				Configurazione existingConf = YModificaConfigurazioneRigaVendita.leggiConfigurazione(articolo.getIdAzienda(), articolo.getIdArticolo(), sintesiConfigGUI);
+				if(existingConf == null) {
+					Configurazione conf = (Configurazione) boDCC.getBo();
+					conf.setIdAzienda(Azienda.getAziendaCorrente());
+					conf.setIdArticolo(articolo.getIdArticolo());
+					conf.setSchemaCfg(articolo.getSchemaCfg());
+					
+					Hashtable newVvv = conf.getVariabiliValoriValue(sintesiConfigGUI);
+					conf.setSintesiConfig(conf.getFormattedSintesiConfigFinal(newVvv));
+					conf.setStatoSezioneCfg(DatiComuniEstesi.VALIDO);
+					conf.getDescrizione().setDescrizione(".");
+					conf.getDescrizione().setDescrizioneRidotta(".");
+					conf.setIdConfigurazione(new Integer(0));
+
+					boDCC.setForceableErrorForced(true);
+					boDCC.setBo(conf);
+
+					rc = boDCC.save();
+
+					if (rc != BODataCollector.OK) {
+						errors.addAll(boDCC.getErrorList().getErrors());
+						return buildResponse(Status.BAD_REQUEST, errors);
+					}
+				}else {
+					boolean stop = true;
+				}
+			}
 
 		}catch (Exception e) {
 			if(e instanceof PantheraApiException) {
@@ -128,9 +173,9 @@ public class ECommerceService {
 		return response;
 	}
 
-	public String costruisciSintesiConfigurazioneGUI(JSONObject bodyAsJSON, SchemaCfg schemaCfg) throws PantheraApiException {
+	public String costruisciSintesiConfigurazioneGUI(JSONObject bodyAsJSON, SchemaCfg schemaCfg, Articolo articolo) throws PantheraApiException {
 		StringBuilder sintesi = new StringBuilder();
-		JSONArray variables = bodyAsJSON.getJSONArray("confVariables");
+		JSONArray variables = bodyAsJSON.getJSONArray("ConfVariables");
 		for (int i = 0; i < variables.length(); i++) {
 			JSONObject variabile = variables.getJSONObject(i);
 
@@ -148,23 +193,120 @@ public class ECommerceService {
 				String c = KeyHelper.buildObjectKey(new String[] {schemaCfg.getKey(), idVariabile});
 				throw new PantheraApiException(Status.BAD_REQUEST, new ErrorMessage("BAS0000004", new String[] {c}));
 			}
-			ValoreVariabileCfg valoreVarCfg = valoreVariabileSchemaConfigurazione(variabileCfg, valore);
+			ValoreVariabileCfg valoreVarCfg = null;
+			int dimcarcodcfg = variabileCfg.getDimCarCodCfg();
+			if (dimcarcodcfg >= 0 & dimcarcodcfg > VariabileSchemaCfg.MIN_DIMCARCODCFG) {
+				valoreVarCfg = valoreVariabileSchemaConfigurazione(variabileCfg, idVariabile, valore);
+			}else {
+				valoreVarCfg = valoreVariabileSchemaConfigurazionePVAL(variabileCfg, idVariabile, valore);
+			}
 			if(valoreVarCfg == null) {
 				String c = KeyHelper.buildObjectKey(new String[] {variabileCfg.getKey(), valore});
 				throw new PantheraApiException(Status.BAD_REQUEST, new ErrorMessage("BAS0000004", new String[] {c}));
 			}
 
-			sintesi.append(idVariabile).append(PersistentObject.KEY_SEPARATOR).append(valore);
+			sintesi.append(idVariabile).append(PersistentObject.KEY_SEPARATOR).append(valore).append(PersistentObject.KEY_SEPARATOR).append(valoreVarCfg.getSequenzaValore());
 
 			// Aggiungo il separatore solo se non sono sull'ultimo elemento
 			if (i < variables.length() - 1) {
-				sintesi.append(ColonneFiltri.SEP);
+				sintesi.append(PersistentObject.KEY_SEPARATOR);
 			}
 		}
-		
+
 		//..Ora le parti parametrizzate (fisse)
 
+		Configurazione confTempo = (Configurazione) Factory.createObject(Configurazione.class);
+		confTempo.setSintesiConfig(sintesi.toString());
+
+		MacroConfigurazione ABILITAZ_COLORE = macroSchemaConfigurazione(schemaCfg, "ABILITAZ_COLORE");
+		if(ABILITAZ_COLORE != null) {
+			GestoreMacroConfigurazione gestore = (GestoreMacroConfigurazione) Factory.createObject(GestoreMacroConfigurazione.class);
+			gestore.esegue(ABILITAZ_COLORE, confTempo);
+
+			sintesi.setLength(0);
+			sintesi.append(confTempo.getSintesiConfig());
+		}
+
+		VariabileSchemaCfg OPERAZ_ELETTRIF = variabileSchemaConfigurazione(schemaCfg, "OPERAZ.ELETTRIF");
+		if(OPERAZ_ELETTRIF != null) {
+			sintesi.append(OPERAZ_ELETTRIF.getIdVariabileConfig()).append(PersistentObject.KEY_SEPARATOR).append("S");
+		}
+
+		VariabileSchemaCfg POSIZ_TERMOST = variabileSchemaConfigurazione(schemaCfg, "POSIZ_TERMOST");
+		if(POSIZ_TERMOST != null) {
+			if(articolo instanceof YArticolo
+					&& articolo.getArticoloDatiTecnici() instanceof YArticoloDatiTecnici
+					&& ((YArticoloDatiTecnici)articolo.getArticoloDatiTecnici()).getDestroOSinistro() != '-') {
+				char destroOSinistro =((YArticoloDatiTecnici) articolo.getArticoloDatiTecnici()).getDestroOSinistro();
+
+				if (destroOSinistro != '-') {
+					aggiungiOSostituisciVariabile(sintesi, POSIZ_TERMOST.getIdVariabileConfig(),String.valueOf(destroOSinistro));
+				}
+			}
+		}
+
 		return sintesi.toString();
+	}
+
+	public void aggiungiOSostituisciVariabile(
+			StringBuilder sintesi,
+			String idVariabile,
+			String valore) {
+
+		String keySeparator = PersistentObject.KEY_SEPARATOR;
+		String separator = ColonneFiltri.SEP;
+
+		String prefisso = idVariabile + keySeparator;
+
+		String[] configurazioni = sintesi.toString().split(
+				java.util.regex.Pattern.quote(separator)
+				);
+
+		StringBuilder nuovaSintesi = new StringBuilder();
+		boolean sostituita = false;
+
+		for (String configurazione : configurazioni) {
+
+			if (configurazione.isEmpty()) {
+				continue;
+			}
+
+			if (configurazione.startsWith(prefisso)) {
+				configurazione = prefisso + valore;
+				sostituita = true;
+			}
+
+			if (nuovaSintesi.length() > 0) {
+				nuovaSintesi.append(separator);
+			}
+
+			nuovaSintesi.append(configurazione);
+		}
+
+		if (!sostituita) {
+			if (nuovaSintesi.length() > 0) {
+				nuovaSintesi.append(separator);
+			}
+
+			nuovaSintesi
+			.append(idVariabile)
+			.append(keySeparator)
+			.append(valore);
+		}
+
+		sintesi.setLength(0);
+		sintesi.append(nuovaSintesi);
+	}
+
+	public MacroConfigurazione macroSchemaConfigurazione(SchemaCfg schemaCfg, String idMacro) {
+		try {
+			return (MacroConfigurazione) MacroConfigurazione.elementWithKey(MacroConfigurazione.class, KeyHelper.buildObjectKey(new String[] {
+					schemaCfg.getKey(), idMacro
+			}), PersistentObject.NO_LOCK);
+		} catch (SQLException e) {
+			e.printStackTrace(Trace.excStream);
+		}
+		return null;
 	}
 
 	public VariabileSchemaCfg variabileSchemaConfigurazione(SchemaCfg schemaCfg, String idVariabile) {
@@ -184,6 +326,40 @@ public class ECommerceService {
 					variabileCfg.getKey(), idValore
 			}), PersistentObject.NO_LOCK);
 		} catch (SQLException e) {
+			e.printStackTrace(Trace.excStream);
+		}
+		return null;
+	}
+
+	@SuppressWarnings("rawtypes")
+	public ValoreVariabileCfg valoreVariabileSchemaConfigurazione(VariabileSchemaCfg variabileCfg, String idVariabile, String carCodCfg) {
+		try {
+			String where = ValoreVariabileCfgTM.ID_AZIENDA+"='"+variabileCfg.getIdAzienda()+"'";
+			where += "AND " + ValoreVariabileCfgTM.ID_SCHEMA_CFG+"='"+variabileCfg.getIdSchemaCfg()+"'";
+			where += "AND " + ValoreVariabileCfgTM.ID_VARIABILE_CFG+"='"+idVariabile+"'";
+			where += "AND " + ValoreVariabileCfgTM.CAR_COD_CFG+"='"+carCodCfg+"'";
+			Vector v = ValoreVariabileCfg.retrieveList(ValoreVariabileCfg.class, where, "", false);
+			if(!v.isEmpty()) {
+				return (ValoreVariabileCfg) v.get(0);
+			}
+		} catch (Exception e) {
+			e.printStackTrace(Trace.excStream);
+		}
+		return null;
+	}
+
+	@SuppressWarnings("rawtypes")
+	public ValoreVariabileCfg valoreVariabileSchemaConfigurazionePVAL(VariabileSchemaCfg variabileCfg, String idVariabile, String primoValore) {
+		try {
+			String where = ValoreVariabileCfgTM.ID_AZIENDA+"='"+variabileCfg.getIdAzienda()+"'";
+			where += "AND " + ValoreVariabileCfgTM.ID_SCHEMA_CFG+"='"+variabileCfg.getIdSchemaCfg()+"'";
+			where += "AND " + ValoreVariabileCfgTM.ID_VARIABILE_CFG+"='"+idVariabile+"'";
+			where += "AND " + ValoreVariabileCfgTM.PRIMO_VALORE+"='"+primoValore+"'";
+			Vector v = ValoreVariabileCfg.retrieveList(ValoreVariabileCfg.class, where, "", false);
+			if(!v.isEmpty()) {
+				return (ValoreVariabileCfg) v.get(0);
+			}
+		} catch (Exception e) {
 			e.printStackTrace(Trace.excStream);
 		}
 		return null;
