@@ -7,3 +7,5 @@
     INSERT INTO <SCH>CLASSAD_NLS (CLASS_NAME, ATTRIBUTE_NAME, LANGUAGE, NLS_ATTRIBUTE_NAME, NLS_COLUMN_TITLE, NLS_LABEL) VALUES ('YArticoloDatiTecnici', 'IdSchemaCfgPW', 'it', 'Potenza Watt - Schema Cfg.', 'Pot. wat. - Sch. Cfg.', null);
     INSERT INTO <SCH>CLASSAD_NLS (CLASS_NAME, ATTRIBUTE_NAME, LANGUAGE, NLS_ATTRIBUTE_NAME, NLS_COLUMN_TITLE, NLS_LABEL) VALUES ('YArticoloDatiTecnici', 'IdVariabilePW', 'it', 'Potenza Watt - Variabile', 'Pot. watt. - Var. Cfg.', null);
     INSERT INTO <SCH>CLASSAD_NLS (CLASS_NAME, ATTRIBUTE_NAME, LANGUAGE, NLS_ATTRIBUTE_NAME, NLS_COLUMN_TITLE, NLS_LABEL) VALUES ('YArticoloDatiTecnici', 'SequenzaValorePW', 'it', 'Potenza Watt - Sequenza Valore', 'Pot. watt. - Seq. Val', null);
+
+UPDATE <SCH>CLASS_HDR SET BO_DATA_COLLECTOR = 'it.caleido.thip.base.articolo.web.YArticoloDatiTecniciDataCollector' WHERE CLASS_NAME = 'YArticoloDatiTecnici';
