@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE TDDML SYSTEM "../../../TDDML.dtd">
+<TDDML>
+   <AlterTable schema="THIPPERS" name="YARTICOLI">
+   		<AddColumn>
+		    <Column name="R_SCHEMA_CFG_POTENZAW" shortname="ID_SCHEMA_" type="char" length="15" nullable="yes"/>
+		    <Column name="R_VARIABILE_CONFIG_POTENZAW" shortname="ID_VARIABI" type="char" length="15" nullable="yes"/>
+		    <Column name="R_SEQUENZA_VALORE_POTENZAW" shortname="SEQUENZA_0" type="smallint" nullable="yes"/>
+    	</AddColumn>
+  </AlterTable>
+</TDDML>
