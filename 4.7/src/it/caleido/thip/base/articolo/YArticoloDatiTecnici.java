@@ -298,7 +298,8 @@ public class YArticoloDatiTecnici extends ArticoloDatiTecnici {
 	public void setSequenzaValorePW(Short sequenzaValoreColore) {
 		String key = iPotenzaWatt.getKey();
 		iPotenzaWatt.setKey(KeyHelper.replaceTokenObjectKey(key , 4, sequenzaValoreColore));
-		setPotenzaWattElettrici(Integer.valueOf(sequenzaValoreColore));
+		if(sequenzaValoreColore != null)
+			setPotenzaWattElettrici(Integer.valueOf(sequenzaValoreColore));
 		setDirty();
 	}
 
