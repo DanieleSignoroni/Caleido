@@ -35,6 +35,7 @@ import it.thera.thip.datiTecnici.configuratore.Configurazione;
 import it.thera.thip.datiTecnici.configuratore.GestoreMacroConfigurazione;
 import it.thera.thip.datiTecnici.configuratore.MacroConfigurazione;
 import it.thera.thip.datiTecnici.configuratore.SchemaCfg;
+import it.thera.thip.datiTecnici.configuratore.SezioneConfigurazione;
 import it.thera.thip.datiTecnici.configuratore.ValoreVariabileCfg;
 import it.thera.thip.datiTecnici.configuratore.ValoreVariabileCfgTM;
 import it.thera.thip.datiTecnici.configuratore.VariabileSchemaCfg;
@@ -65,12 +66,15 @@ public class ECommerceService {
 		return service;
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public JSONObject riceviConfigurazione(String body) {
 		JSONObject response = new JSONObject();
 		JSONObject result = new JSONObject();
 		Status status = Status.OK;
 		Collection<ErrorMessage> errors = new ArrayList<>();
+
+		boolean confCreated = false;
+		String keyConfCreated = null;
 
 		try {
 			JSONObject bodyAsJSON = new JSONObject(body);
@@ -137,13 +141,17 @@ public class ECommerceService {
 					conf.setIdAzienda(Azienda.getAziendaCorrente());
 					conf.setIdArticolo(articolo.getIdArticolo());
 					conf.setSchemaCfg(articolo.getSchemaCfg());
-					
+
 					Hashtable newVvv = conf.getVariabiliValoriValue(sintesiConfigGUI);
 					conf.setSintesiConfig(conf.getFormattedSintesiConfigFinal(newVvv));
 					conf.setStatoSezioneCfg(DatiComuniEstesi.VALIDO);
 					conf.getDescrizione().setDescrizione(".");
 					conf.getDescrizione().setDescrizioneRidotta(".");
 					conf.setIdConfigurazione(new Integer(0));
+
+					SezioneConfigurazione sezConferma = conf.getSezioneCfg(Configurazione.ID_SEZ_CONFERMA);
+					if(sezConferma != null)
+						conf.setIdSezioneCfg(sezConferma.getIdSezioneCfg());
 
 					boDCC.setForceableErrorForced(true);
 					boDCC.setBo(conf);
@@ -153,6 +161,9 @@ public class ECommerceService {
 					if (rc != BODataCollector.OK) {
 						errors.addAll(boDCC.getErrorList().getErrors());
 						return buildResponse(Status.BAD_REQUEST, errors);
+					}else {
+						confCreated = true;
+						keyConfCreated = KeyHelper.formatKeyString(boDCC.getBo().getKey());
 					}
 				}else {
 					boolean stop = true;
@@ -170,6 +181,10 @@ public class ECommerceService {
 		}
 
 		response = buildResponse(status, errors);
+		if(confCreated) {
+			response.getJSONObject("response").put("confCreated", confCreated);
+			response.getJSONObject("response").put("keyConfCreated", keyConfCreated);
+		}
 		return response;
 	}
 
@@ -205,7 +220,7 @@ public class ECommerceService {
 				throw new PantheraApiException(Status.BAD_REQUEST, new ErrorMessage("BAS0000004", new String[] {c}));
 			}
 
-			sintesi.append(idVariabile).append(PersistentObject.KEY_SEPARATOR).append(valore).append(PersistentObject.KEY_SEPARATOR).append(valoreVarCfg.getSequenzaValore());
+			sintesi.append(idVariabile).append(PersistentObject.KEY_SEPARATOR).append(valoreVarCfg.getPrimoValore()).append(PersistentObject.KEY_SEPARATOR).append(valoreVarCfg.getSequenzaValore());
 
 			// Aggiungo il separatore solo se non sono sull'ultimo elemento
 			if (i < variables.length() - 1) {
