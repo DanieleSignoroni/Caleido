@@ -37,7 +37,6 @@ public class YArticoloDatiTecniciTM extends ArticoloDatiTecniciTM {
 
 	public static final String ID_SCHEMA_CFG_POTENZAW = "R_SCHEMA_CFG_POTENZAW";
 	public static final String ID_VARIABILE_CONFIG_POTENZAW = "R_VARIABILE_CONFIG_POTENZAW";
-	public static final String SEQUENZA_VALORE_POTENZAW = "R_SEQUENZA_VALORE_POTENZAW";
 
 	public static final String TABLE_NAME_EXT = SystemParam.getSchema("THIPPERS") + "YARTICOLI";
 
@@ -64,9 +63,9 @@ public class YArticoloDatiTecniciTM extends ArticoloDatiTecniciTM {
 		addAttributeOnTable("IdModelloTermostato", R_MODELLO_TERMOSTATO, TABLE_NAME_EXT);
 		addAttributeOnTable("IdFinitura", R_FINITURA, TABLE_NAME_EXT);
 		
-		addAttribute("IdSchemaCfgPW", ID_SCHEMA_CFG_POTENZAW);
-		addAttribute("IdVariabilePW", ID_VARIABILE_CONFIG_POTENZAW);
-		addAttribute("SequenzaValorePW", SEQUENZA_VALORE_POTENZAW, "getShortObject");
+		addAttributeOnTable("IdSchemaCfgPW", ID_SCHEMA_CFG_POTENZAW, TABLE_NAME_EXT);
+		addAttributeOnTable("IdVariabilePW", ID_VARIABILE_CONFIG_POTENZAW, TABLE_NAME_EXT);
+		addAttributeOnTable("SequenzaValorePW", POTENZA_WATT_ELETTRICI, "getShortObject", TABLE_NAME_EXT);
 	}
 
 }

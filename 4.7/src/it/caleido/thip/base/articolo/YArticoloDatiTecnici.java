@@ -1,10 +1,14 @@
 package it.caleido.thip.base.articolo;
 
+import java.sql.SQLException;
+
+import com.thera.thermfw.base.Trace;
 import com.thera.thermfw.persist.*;
 import it.caleido.thip.datiTecnici.configuratore.YModelloTermostato;
 import it.thera.thip.base.articolo.*;
 import it.thera.thip.base.azienda.Azienda;
 import it.thera.thip.datiTecnici.configuratore.ValoreVariabileCfg;
+import it.thera.thip.datiTecnici.configuratore.VariabileSchemaCfg;
 
 /**
  * <p>
@@ -273,9 +277,10 @@ public class YArticoloDatiTecnici extends ArticoloDatiTecnici {
 	}
 
 	public String getIdSchemaCfgPW() {
-		String key = iPotenzaWatt.getKey();
-		String objIdSchemaCfgColore = KeyHelper.getTokenObjectKey(key,2);
-		return objIdSchemaCfgColore;
+		//			String key = iPotenzaWatt.getKey();
+		//			String objIdSchemaCfgColore = KeyHelper.getTokenObjectKey(key,2);
+		//			return objIdSchemaCfgColore;
+		return getIdSchemaCfg();
 	}
 
 	public void setIdVariabilePW(String idVariabileConfigColore) {
@@ -293,6 +298,7 @@ public class YArticoloDatiTecnici extends ArticoloDatiTecnici {
 	public void setSequenzaValorePW(Short sequenzaValoreColore) {
 		String key = iPotenzaWatt.getKey();
 		iPotenzaWatt.setKey(KeyHelper.replaceTokenObjectKey(key , 4, sequenzaValoreColore));
+		setPotenzaWattElettrici(Integer.valueOf(sequenzaValoreColore));
 		setDirty();
 	}
 
@@ -327,6 +333,17 @@ public class YArticoloDatiTecnici extends ArticoloDatiTecnici {
 			String key4 = iPotenzaWatt.getKey();
 			iPotenzaWatt.setKey(KeyHelper.replaceTokenObjectKey(key4, 1, idAzienda));
 		}
+	}
+
+	public VariabileSchemaCfg getVariabilePotenza() {
+		try {
+			return (VariabileSchemaCfg) VariabileSchemaCfg.elementWithKey(VariabileSchemaCfg.class, KeyHelper.buildObjectKey(new String[] {
+					getIdAzienda(),  getIdSchemaCfg(), "POTENZA"
+			}), PersistentObject.NO_LOCK);
+		} catch (SQLException e) {
+			e.printStackTrace(Trace.excStream);
+		}
+		return null;
 	}
 
 }
