@@ -89,7 +89,7 @@ public class ECommerceService {
 				return buildResponse(Status.BAD_REQUEST, errors);
 			}
 
-			if (!bodyAsJSON.has("ConfVariables")) {
+			if (!bodyAsJSON.has("Variabili")) {
 				ErrorMessage err = new ErrorMessage("BAS0000078", "Indicare le variabili di configurazione");
 				errors.add(err);
 
@@ -190,7 +190,7 @@ public class ECommerceService {
 
 	public String costruisciSintesiConfigurazioneGUI(JSONObject bodyAsJSON, SchemaCfg schemaCfg, Articolo articolo) throws PantheraApiException {
 		StringBuilder sintesi = new StringBuilder();
-		JSONArray variables = bodyAsJSON.getJSONArray("ConfVariables");
+		JSONArray variables = bodyAsJSON.getJSONArray("Variabili");
 		for (int i = 0; i < variables.length(); i++) {
 			JSONObject variabile = variables.getJSONObject(i);
 
