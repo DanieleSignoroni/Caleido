@@ -1,0 +1,25 @@
+# Ignore everything
+*
+
+# Allow .gitignore itself
+!.gitignore
+
+# Allow the 4.7 folder
+!4.7/
+
+# Ignore everything inside 4.7
+4.7/*
+
+# Allow only selected folders
+!4.7/src/
+!4.7/sql/
+!4.7/websrc/
+!4.7/tddml/
+!4.7/fix/
+
+# Allow contents of selected folders
+!4.7/src/**
+!4.7/sql/**
+!4.7/websrc/**
+!4.7/tddml/**
+!4.7/fix/**
