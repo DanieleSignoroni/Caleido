@@ -11,6 +11,7 @@ import java.util.Vector;
 import javax.ws.rs.core.Response.Status;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.thera.thermfw.ad.ClassADCollection;
@@ -30,9 +31,12 @@ import com.thera.thermfw.type.EnumType;
 
 import it.caleido.thip.base.articolo.YArticolo;
 import it.caleido.thip.base.articolo.YArticoloDatiTecnici;
+import it.caleido.thip.datiTecnici.configuratore.YModelloTermostato;
+import it.caleido.thip.datiTecnici.configuratore.YModelloTermostatoTM;
 import it.caleido.thip.vendite.generaleVE.YModificaConfigurazioneRigaVendita;
 import it.thera.thip.base.articolo.Articolo;
 import it.thera.thip.base.azienda.Azienda;
+import it.thera.thip.base.cliente.Cliente;
 import it.thera.thip.base.generale.NumeratoreHandler;
 import it.thera.thip.cs.DatiComuniEstesi;
 import it.thera.thip.datiTecnici.configuratore.Configurazione;
@@ -313,11 +317,16 @@ public class ECommerceService {
 				throw new PantheraApiException(Status.BAD_REQUEST, new ErrorMessage("BAS0000004", new String[] {c}));
 			}
 			ValoreVariabileCfg valoreVarCfg = null;
-			int dimcarcodcfg = variabileCfg.getDimCarCodCfg();
-			if (dimcarcodcfg >= 0 & dimcarcodcfg > VariabileSchemaCfg.MIN_DIMCARCODCFG) {
-				valoreVarCfg = valoreVariabileSchemaConfigurazione(variabileCfg, idVariabile, valore);
+			if(idVariabile.equals("TERMOSTATO")) {
+				//..Ricerca su tabella THIPPERS.YMODELLO_TERMOSTATO con valore passato dall'e-commerce
+				valoreVarCfg = ricercaModelloTermostato(bodyAsJSON, schemaCfg, valore);
 			}else {
-				valoreVarCfg = valoreVariabileSchemaConfigurazionePVAL(variabileCfg, idVariabile, valore);
+				int dimcarcodcfg = variabileCfg.getDimCarCodCfg();
+				if (dimcarcodcfg >= 0 & dimcarcodcfg > VariabileSchemaCfg.MIN_DIMCARCODCFG) {
+					valoreVarCfg = valoreVariabileSchemaConfigurazione(variabileCfg, idVariabile, valore);
+				}else {
+					valoreVarCfg = valoreVariabileSchemaConfigurazionePVAL(variabileCfg, idVariabile, valore);
+				}
 			}
 			if(valoreVarCfg == null) {
 				String c = KeyHelper.buildObjectKey(new String[] {variabileCfg.getKey(), valore});
@@ -415,6 +424,39 @@ public class ECommerceService {
 
 
 		return sintesi.toString();
+	}
+
+	@SuppressWarnings("rawtypes")
+	public ValoreVariabileCfg ricercaModelloTermostato(JSONObject bodyAsJSON, SchemaCfg schemaCfg, String valore) {
+		try {
+			Cliente cliente = (Cliente) Cliente.elementWithKey(Cliente.class, KeyHelper.buildObjectKey(new String[] {
+					Azienda.getAziendaCorrente(), (String) bodyAsJSON.get("IdCliente")
+			}), PersistentObject.NO_LOCK);
+			if(cliente != null) {
+				String idNazione = cliente.getIdNazione();
+
+				String where = " "+YModelloTermostatoTM.ID_AZIENDA+" = '"+Azienda.getAziendaCorrente()+"' ";
+				where += " AND "+YModelloTermostatoTM.DESCRIZIONE+" = '"+valore+"' ";
+				where += " AND "+YModelloTermostatoTM.ID_SCHEMA_CFG+" = '"+schemaCfg.getIdSchemaCfg()+"' ";
+
+				String whereNazi = " AND "+YModelloTermostatoTM.IDNAZIONE+" = '"+idNazione+"' ";
+
+				Vector v = YModelloTermostato.retrieveList(YModelloTermostato.class, where + whereNazi, "", false);
+				if(v.isEmpty()) {
+					v = YModelloTermostato.retrieveList(YModelloTermostato.class, where, "", false);
+				}
+				if(!v.isEmpty()) {
+					YModelloTermostato modello = (YModelloTermostato) v.get(0);
+					return (ValoreVariabileCfg) ValoreVariabileCfg.elementWithKey(ValoreVariabileCfg.class, KeyHelper.buildObjectKey(new String[] {
+							modello.getSchemaconfigurazioneKey(), modello.getIdVariabileConfig(), String.valueOf(modello.getSequenzaValore())
+					}),PersistentObject.NO_LOCK);
+				}
+
+			}
+		} catch (Exception e) {
+			e.printStackTrace(Trace.excStream);
+		}
+		return null;
 	}
 
 	public void aggiungiOSostituisciVariabile(
