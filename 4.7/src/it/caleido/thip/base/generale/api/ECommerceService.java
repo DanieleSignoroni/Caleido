@@ -203,13 +203,11 @@ public class ECommerceService {
 		}
 
 		response = buildResponse(status, errors);
+		response.getJSONObject("response").put("confCreated", confCreated);
 		if(confCreated) {
-			response.getJSONObject("response").put("confCreated", confCreated);
 			response.getJSONObject("response").put("keyConfCreated", keyConfCreated);
 		}
-		if(prezzo != null) {
-			response.getJSONObject("response").put("prezzo", prezzo);
-		}
+		response.getJSONObject("response").put("prezzo", prezzo != null ? prezzo : BigDecimal.ZERO);
 		return response;
 	}
 
@@ -656,19 +654,19 @@ public class ECommerceService {
 		sintesi.setLength(0);
 		sintesi.append(nuovaSintesi);
 	}
-	
+
 	public String getValoreVariabile(JSONObject bodyAsJSON, String idVariabile) {
-	    JSONArray variabili = bodyAsJSON.getJSONArray("Variabili");
+		JSONArray variabili = bodyAsJSON.getJSONArray("Variabili");
 
-	    for (int i = 0; i < variabili.length(); i++) {
-	        JSONObject variabile = variabili.getJSONObject(i);
+		for (int i = 0; i < variabili.length(); i++) {
+			JSONObject variabile = variabili.getJSONObject(i);
 
-	        if (variabile.has(idVariabile)) {
-	            return variabile.getString(idVariabile);
-	        }
-	    }
+			if (variabile.has(idVariabile)) {
+				return variabile.getString(idVariabile);
+			}
+		}
 
-	    return null;
+		return null;
 	}
 
 	public MacroConfigurazione macroSchemaConfigurazione(SchemaCfg schemaCfg, String idMacro) {
