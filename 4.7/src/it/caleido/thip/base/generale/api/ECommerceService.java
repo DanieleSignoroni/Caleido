@@ -343,21 +343,7 @@ public class ECommerceService {
 		boolean sepAdded = false;
 
 		//..Ora le parti parametrizzate (fisse)
-
-		Configurazione confTempo = (Configurazione) Factory.createObject(Configurazione.class);
-		confTempo.setSchemaCfg(schemaCfg);
-		confTempo.setArticolo(articolo);
-		confTempo.setSintesiConfig(sintesi.toString());
-
-		MacroConfigurazione ABILITAZ_COLORE = macroSchemaConfigurazione(schemaCfg, "ACCESSORIO");
-		if(ABILITAZ_COLORE != null) {
-			GestoreMacroConfigurazione gestore = (GestoreMacroConfigurazione) Factory.createObject(GestoreMacroConfigurazione.class);
-			gestore.esegue(ABILITAZ_COLORE, confTempo);
-
-			sintesi.setLength(0);
-			sintesi.append(confTempo.getSintesiConfig());
-		}
-
+		
 		VariabileSchemaCfg OPERAZ_ELETTRIF = variabileSchemaConfigurazione(schemaCfg, "OPERAZ.ELETTRIF");
 		if(OPERAZ_ELETTRIF != null) {
 			if(!sepAdded) {
@@ -423,6 +409,21 @@ public class ECommerceService {
 		}
 		//Potenza Watt >
 		
+		//Macro <
+		Configurazione confTempo = (Configurazione) Factory.createObject(Configurazione.class);
+		confTempo.setSchemaCfg(schemaCfg);
+		confTempo.setArticolo(articolo);
+		confTempo.setSintesiConfig(sintesi.toString());
+
+		MacroConfigurazione ABILITAZ_COLORE = macroSchemaConfigurazione(schemaCfg, "ACCESSORIO");
+		if(ABILITAZ_COLORE != null) {
+			GestoreMacroConfigurazione gestore = (GestoreMacroConfigurazione) Factory.createObject(GestoreMacroConfigurazione.class);
+			gestore.esegue(ABILITAZ_COLORE, confTempo);
+
+			sintesi.setLength(0);
+			sintesi.append(confTempo.getSintesiConfig());
+		}
+		
 		MacroConfigurazione TIPO_ESTRUSO = macroSchemaConfigurazione(schemaCfg, "TIPO ESTRUSO");
 		if(TIPO_ESTRUSO != null) {
 			GestoreMacroConfigurazione gestore = (GestoreMacroConfigurazione) Factory.createObject(GestoreMacroConfigurazione.class);
@@ -449,6 +450,7 @@ public class ECommerceService {
 			sintesi.setLength(0);
 			sintesi.append(confTempo.getSintesiConfig());
 		}
+		//Macro >
 
 
 		return sintesi.toString();
