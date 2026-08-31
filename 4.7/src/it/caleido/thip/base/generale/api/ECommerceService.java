@@ -33,9 +33,7 @@ import it.caleido.thip.base.articolo.YArticoloDatiTecnici;
 import it.caleido.thip.vendite.generaleVE.YModificaConfigurazioneRigaVendita;
 import it.thera.thip.base.articolo.Articolo;
 import it.thera.thip.base.azienda.Azienda;
-import it.thera.thip.base.generale.Numeratore;
 import it.thera.thip.base.generale.NumeratoreHandler;
-import it.thera.thip.cs.ColonneFiltri;
 import it.thera.thip.cs.DatiComuniEstesi;
 import it.thera.thip.datiTecnici.configuratore.Configurazione;
 import it.thera.thip.datiTecnici.configuratore.GestoreMacroConfigurazione;
@@ -77,7 +75,6 @@ public class ECommerceService {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public JSONObject riceviConfigurazione(String body) {
 		JSONObject response = new JSONObject();
-		JSONObject result = new JSONObject();
 		Status status = Status.OK;
 		Collection<ErrorMessage> errors = new ArrayList<>();
 
@@ -87,79 +84,24 @@ public class ECommerceService {
 		try {
 			JSONObject bodyAsJSON = new JSONObject(body);
 
-			BODataCollector boDCArt = createDataCollector("Articolo");
-			BODataCollector boDCCLI = createDataCollector("ClienteVendita");
-
-			if (!bodyAsJSON.has("IdArticolo")) {
-				ErrorMessage err = new ErrorMessage("BAS0000000");
-				aggiungiComponenteInErrore("IdArticolo", "Articolo", boDCArt, err);
-				errors.add(err);
-
+			errors = validaDatiRicezioneConfigurazione(bodyAsJSON);
+			if(!errors.isEmpty()) {
 				return buildResponse(Status.BAD_REQUEST, errors);
 			}
 
-			if (!bodyAsJSON.has("Variabili")) {
-				ErrorMessage err = new ErrorMessage("BAS0000078", "Indicare le variabili di configurazione");
-				errors.add(err);
-
-				return buildResponse(Status.BAD_REQUEST, errors);
-			}
-
-			if (!bodyAsJSON.has("IdCliente")) {
-				ErrorMessage err = new ErrorMessage("BAS0000000");
-				aggiungiComponenteInErrore("IdCliente", "ClienteVendita", boDCArt, err);
-				errors.add(err);
-
-				return buildResponse(Status.BAD_REQUEST, errors);
-			}
-
-			int rc = boDCArt.initSecurityServices(OpenType.UPDATE, true, true, true);
-
-			if (rc != BODataCollector.OK) {
-				errors.addAll(boDCArt.getErrorList().getErrors());
-				return buildResponse(Status.BAD_REQUEST, errors);
-			}
-
-			rc = boDCArt.retrieve(
-					KeyHelper.buildObjectKey(new String[] {
-							Azienda.getAziendaCorrente(),
-							bodyAsJSON.getString("IdArticolo")
-					}));
-
-			if (rc != BODataCollector.OK) {
-				errors.addAll(boDCArt.getErrorList().getErrors());
-				return buildResponse(Status.BAD_REQUEST, errors);
-			}
-
-			rc = boDCCLI.retrieve(
-					KeyHelper.buildObjectKey(new String[] {
-							Azienda.getAziendaCorrente(),
-							bodyAsJSON.getString("IdCliente")
-					}));
-
-			if (rc != BODataCollector.OK) {
-				errors.addAll(boDCCLI.getErrorList().getErrors());
-				return buildResponse(Status.BAD_REQUEST, errors);
-			}
-
-			Articolo articolo = (Articolo) boDCArt.getBo();
-
-			if (articolo.getSchemaCfg() == null) {
-				ErrorMessage err = new ErrorMessage("BAS0000000");
-				aggiungiComponenteInErrore("IdSchemaCfg", "Articolo", boDCArt, err);
-				errors.add(err);
-
-				return buildResponse(Status.BAD_REQUEST, errors);
-			}
+			Articolo articolo = (Articolo) Articolo.elementWithKey(Articolo.class, KeyHelper.buildObjectKey(new String[] {
+					Azienda.getAziendaCorrente(),
+					bodyAsJSON.getString("IdArticolo")
+			}), PersistentObject.NO_LOCK);
 
 			String sintesiConfigGUI = costruisciSintesiConfigurazioneGUI(bodyAsJSON, articolo.getSchemaCfg(), articolo);
 			if(sintesiConfigGUI != null) {
 				BODataCollector boDCC = createDataCollector("Configurazione");
 
-				rc = boDCC.initSecurityServices(OpenType.NEW, true, true, true);
+				int rc = boDCC.initSecurityServices(OpenType.NEW, true, true, true);
 
 				if (rc != BODataCollector.OK) {
-					errors.addAll(boDCArt.getErrorList().getErrors());
+					errors.addAll(boDCC.getErrorList().getErrors());
 					return buildResponse(Status.BAD_REQUEST, errors);
 				}
 
@@ -180,7 +122,7 @@ public class ECommerceService {
 					SezioneConfigurazione sezConferma = conf.getSezioneCfg(Configurazione.ID_SEZ_CONFERMA);
 					if(sezConferma != null)
 						conf.setIdSezioneCfg(sezConferma.getIdSezioneCfg());
-
+					
 					boDCC.setForceableErrorForced(true);
 					boDCC.setBo(conf);
 
@@ -218,7 +160,7 @@ public class ECommerceService {
 									if(rc > 0) {
 										BigDecimal prezzo = riga.getPrezzo();
 										if(prezzo != null) {
-											boolean s = true;
+											//put prezzo in response 
 										}
 									}
 								}
@@ -260,6 +202,65 @@ public class ECommerceService {
 			response.getJSONObject("response").put("keyConfCreated", keyConfCreated);
 		}
 		return response;
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public Vector validaDatiRicezioneConfigurazione(JSONObject bodyAsJSON) throws NoSuchElementException, NoSuchFieldException {
+		Vector errors = new Vector();
+		BODataCollector boDCArt = createDataCollector("Articolo");
+		BODataCollector boDCCLI = createDataCollector("ClienteVendita");
+
+		if (!bodyAsJSON.has("IdArticolo")) {
+			ErrorMessage err = new ErrorMessage("BAS0000000");
+			aggiungiComponenteInErrore("IdArticolo", "Articolo", boDCArt, err);
+			errors.add(err);
+		}
+
+		if (!bodyAsJSON.has("Variabili")) {
+			ErrorMessage err = new ErrorMessage("BAS0000078", "Indicare le variabili di configurazione");
+			errors.add(err);
+		}
+
+		if (!bodyAsJSON.has("IdCliente")) {
+			ErrorMessage err = new ErrorMessage("BAS0000000");
+			aggiungiComponenteInErrore("IdCliente", "ClienteVendita", boDCCLI, err);
+			errors.add(err);
+		}
+
+		int rc = boDCArt.initSecurityServices(OpenType.UPDATE, true, true, true);
+
+		if (rc != BODataCollector.OK) {
+			errors.addAll(boDCArt.getErrorList().getErrors());
+		}
+
+		rc = boDCArt.retrieve(
+				KeyHelper.buildObjectKey(new String[] {
+						Azienda.getAziendaCorrente(),
+						bodyAsJSON.getString("IdArticolo")
+				}));
+
+		if (rc != BODataCollector.OK) {
+			errors.addAll(boDCArt.getErrorList().getErrors());
+		}
+
+		rc = boDCCLI.retrieve(
+				KeyHelper.buildObjectKey(new String[] {
+						Azienda.getAziendaCorrente(),
+						bodyAsJSON.getString("IdCliente")
+				}));
+
+		if (rc != BODataCollector.OK) {
+			errors.addAll(boDCCLI.getErrorList().getErrors());
+		}
+
+		Articolo articolo = (Articolo) boDCArt.getBo();
+
+		if (articolo.getSchemaCfg() == null) {
+			ErrorMessage err = new ErrorMessage("BAS0000000");
+			aggiungiComponenteInErrore("IdSchemaCfg", "Articolo", boDCArt, err);
+			errors.add(err);
+		}
+		return errors;
 	}
 
 	public OffertaCliente creaOffertaCliente(String idNumeratore, String idSerie, String idCau, String idCliente) {
