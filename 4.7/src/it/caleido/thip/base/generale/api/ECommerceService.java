@@ -11,7 +11,6 @@ import java.util.Vector;
 import javax.ws.rs.core.Response.Status;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.thera.thermfw.ad.ClassADCollection;
@@ -346,9 +345,11 @@ public class ECommerceService {
 		//..Ora le parti parametrizzate (fisse)
 
 		Configurazione confTempo = (Configurazione) Factory.createObject(Configurazione.class);
+		confTempo.setSchemaCfg(schemaCfg);
+		confTempo.setArticolo(articolo);
 		confTempo.setSintesiConfig(sintesi.toString());
 
-		MacroConfigurazione ABILITAZ_COLORE = macroSchemaConfigurazione(schemaCfg, "ABILITAZ_COLORE");
+		MacroConfigurazione ABILITAZ_COLORE = macroSchemaConfigurazione(schemaCfg, "ACCESSORIO");
 		if(ABILITAZ_COLORE != null) {
 			GestoreMacroConfigurazione gestore = (GestoreMacroConfigurazione) Factory.createObject(GestoreMacroConfigurazione.class);
 			gestore.esegue(ABILITAZ_COLORE, confTempo);
@@ -421,6 +422,33 @@ public class ECommerceService {
 			}
 		}
 		//Potenza Watt >
+		
+		MacroConfigurazione TIPO_ESTRUSO = macroSchemaConfigurazione(schemaCfg, "TIPO ESTRUSO");
+		if(TIPO_ESTRUSO != null) {
+			GestoreMacroConfigurazione gestore = (GestoreMacroConfigurazione) Factory.createObject(GestoreMacroConfigurazione.class);
+			gestore.esegue(TIPO_ESTRUSO, confTempo);
+
+			sintesi.setLength(0);
+			sintesi.append(confTempo.getSintesiConfig());
+		}
+		
+		MacroConfigurazione TIPO_FINEDESIGN = macroSchemaConfigurazione(schemaCfg, "TIPO FINEDESIGN");
+		if(TIPO_FINEDESIGN != null) {
+			GestoreMacroConfigurazione gestore = (GestoreMacroConfigurazione) Factory.createObject(GestoreMacroConfigurazione.class);
+			gestore.esegue(TIPO_FINEDESIGN, confTempo);
+
+			sintesi.setLength(0);
+			sintesi.append(confTempo.getSintesiConfig());
+		}
+		
+		MacroConfigurazione TIPO_SCALD = macroSchemaConfigurazione(schemaCfg, "TIPO SCALDASALV");
+		if(TIPO_SCALD != null) {
+			GestoreMacroConfigurazione gestore = (GestoreMacroConfigurazione) Factory.createObject(GestoreMacroConfigurazione.class);
+			gestore.esegue(TIPO_SCALD, confTempo);
+
+			sintesi.setLength(0);
+			sintesi.append(confTempo.getSintesiConfig());
+		}
 
 
 		return sintesi.toString();
