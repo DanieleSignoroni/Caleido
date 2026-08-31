@@ -80,6 +80,7 @@ public class ECommerceService {
 
 		boolean confCreated = false;
 		String keyConfCreated = null;
+		BigDecimal prezzo = null;
 
 		try {
 			JSONObject bodyAsJSON = new JSONObject(body);
@@ -122,7 +123,7 @@ public class ECommerceService {
 					SezioneConfigurazione sezConferma = conf.getSezioneCfg(Configurazione.ID_SEZ_CONFERMA);
 					if(sezConferma != null)
 						conf.setIdSezioneCfg(sezConferma.getIdSezioneCfg());
-					
+
 					boDCC.setForceableErrorForced(true);
 					boDCC.setBo(conf);
 
@@ -130,7 +131,7 @@ public class ECommerceService {
 
 					if(rc == BODataCollector.ERROR
 							&& boDCC.getErrorList().getErrors().size() == 1
-							&& ((ErrorMessage)boDCC.getErrorList().getErrors().get(0)).getId().equals("THIP_BS051")) {
+							&& ((ErrorMessage)boDCC.getErrorList().getErrors().get(0)).getId().equals("THIP_BS051")) { //..Esiste gia'
 						conf = conf.getConfigurazioneEquivalente();
 						rc = BODataCollector.OK;
 					}else {
@@ -158,10 +159,7 @@ public class ECommerceService {
 								if(riga != null) {
 									rc = riga.save();
 									if(rc > 0) {
-										BigDecimal prezzo = riga.getPrezzo();
-										if(prezzo != null) {
-											//put prezzo in response 
-										}
+										prezzo = riga.getPrezzo();
 									}
 								}
 							}
@@ -200,6 +198,9 @@ public class ECommerceService {
 		if(confCreated) {
 			response.getJSONObject("response").put("confCreated", confCreated);
 			response.getJSONObject("response").put("keyConfCreated", keyConfCreated);
+		}
+		if(prezzo != null) {
+			response.getJSONObject("response").put("prezzo", prezzo);
 		}
 		return response;
 	}
