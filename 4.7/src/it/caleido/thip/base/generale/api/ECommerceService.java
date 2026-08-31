@@ -30,6 +30,7 @@ import com.thera.thermfw.type.EnumType;
 
 import it.caleido.thip.base.articolo.YArticolo;
 import it.caleido.thip.base.articolo.YArticoloDatiTecnici;
+import it.caleido.thip.base.connettori.utils.YPsnDatiEcommerce;
 import it.caleido.thip.datiTecnici.configuratore.YModelloTermostato;
 import it.caleido.thip.datiTecnici.configuratore.YModelloTermostatoTM;
 import it.caleido.thip.vendite.generaleVE.YModificaConfigurazioneRigaVendita;
@@ -155,7 +156,7 @@ public class ECommerceService {
 					ConnectionManager.pushConnection();
 					OffertaCliente off = null;
 					try {
-						off = creaOffertaCliente("OFFERTE_CLI", "IT", "O01", bodyAsJSON.getString("IdCliente"));
+						off = creaOffertaCliente(bodyAsJSON.getString("IdCliente"));
 						if(off != null) {
 							rc = off.save();
 							if(rc > 0) {
@@ -268,13 +269,13 @@ public class ECommerceService {
 		return errors;
 	}
 
-	public OffertaCliente creaOffertaCliente(String idNumeratore, String idSerie, String idCau, String idCliente) {
+	public OffertaCliente creaOffertaCliente(String idCliente) {
 		OffertaCliente offerta = (OffertaCliente) Factory.createObject(OffertaCliente.class);
 		offerta.setIdAzienda(Azienda.getAziendaCorrente());
 		offerta.getNumeratoreHandler().setDataDocumento(TimeUtils.getCurrentDate());
-		offerta.getNumeratoreHandler().setIdNumeratore(idNumeratore);
-		offerta.getNumeratoreHandler().setIdSerie(idSerie);
-		offerta.setIdCau(idCau);
+		offerta.getNumeratoreHandler().setIdNumeratore(YPsnDatiEcommerce.getCurrentYPsnDatiEcommerce().getRNumeratoreOffVen());
+		offerta.getNumeratoreHandler().setIdSerie(YPsnDatiEcommerce.getCurrentYPsnDatiEcommerce().getRSerieOffVen());
+		offerta.setIdCau(YPsnDatiEcommerce.getCurrentYPsnDatiEcommerce().getRCauOffTes());
 		offerta.setIdCliente(idCliente);
 		offerta.setTipoIntestatarioOfferta(OffertaCliente.TIPO_INTESTATARIO_CLIENTE);
 		offerta.completaBO();
@@ -285,7 +286,7 @@ public class ECommerceService {
 		OffertaClienteRigaPrm riga = (OffertaClienteRigaPrm) Factory.createObject(OffertaClienteRigaPrm.class);
 		riga.setTestata(offerta);
 		riga.setIdAzienda(Azienda.getAziendaCorrente());
-		riga.setIdCauRig(offerta.getCausale().getIdCausaleRigaOffertaVen());
+		riga.setIdCauRig(YPsnDatiEcommerce.getCurrentYPsnDatiEcommerce().getRCauOffRig());
 		riga.setArticolo(articolo);
 		riga.setConfigurazione(conf);
 		riga.setIdUMRif(articolo.getIdUMRiferimento());
@@ -343,7 +344,7 @@ public class ECommerceService {
 		boolean sepAdded = false;
 
 		//..Ora le parti parametrizzate (fisse)
-		
+
 		VariabileSchemaCfg OPERAZ_ELETTRIF = variabileSchemaConfigurazione(schemaCfg, "OPERAZ.ELETTRIF");
 		if(OPERAZ_ELETTRIF != null) {
 			if(!sepAdded) {
@@ -408,7 +409,7 @@ public class ECommerceService {
 			}
 		}
 		//Potenza Watt >
-		
+
 		//Macro <
 		Configurazione confTempo = (Configurazione) Factory.createObject(Configurazione.class);
 		confTempo.setSchemaCfg(schemaCfg);
@@ -423,7 +424,7 @@ public class ECommerceService {
 			sintesi.setLength(0);
 			sintesi.append(confTempo.getSintesiConfig());
 		}
-		
+
 		MacroConfigurazione TIPO_ESTRUSO = macroSchemaConfigurazione(schemaCfg, "TIPO ESTRUSO");
 		if(TIPO_ESTRUSO != null) {
 			GestoreMacroConfigurazione gestore = (GestoreMacroConfigurazione) Factory.createObject(GestoreMacroConfigurazione.class);
@@ -432,7 +433,7 @@ public class ECommerceService {
 			sintesi.setLength(0);
 			sintesi.append(confTempo.getSintesiConfig());
 		}
-		
+
 		MacroConfigurazione TIPO_FINEDESIGN = macroSchemaConfigurazione(schemaCfg, "TIPO FINEDESIGN");
 		if(TIPO_FINEDESIGN != null) {
 			GestoreMacroConfigurazione gestore = (GestoreMacroConfigurazione) Factory.createObject(GestoreMacroConfigurazione.class);
@@ -441,7 +442,7 @@ public class ECommerceService {
 			sintesi.setLength(0);
 			sintesi.append(confTempo.getSintesiConfig());
 		}
-		
+
 		MacroConfigurazione TIPO_SCALD = macroSchemaConfigurazione(schemaCfg, "TIPO SCALDASALV");
 		if(TIPO_SCALD != null) {
 			GestoreMacroConfigurazione gestore = (GestoreMacroConfigurazione) Factory.createObject(GestoreMacroConfigurazione.class);
