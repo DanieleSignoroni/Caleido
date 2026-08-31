@@ -363,6 +363,27 @@ public class ECommerceService {
 				}
 			}
 		}
+		
+		VariabileSchemaCfg FISSAGGI = variabileSchemaConfigurazione(schemaCfg, "FISSAGGI");
+		if(FISSAGGI != null) {
+			if(!sepAdded) {
+				sintesi.append(PersistentObject.KEY_SEPARATOR);
+				sepAdded = true;
+			}
+			ValoreVariabileCfg valoreVarCfg = valoreVariabileSchemaConfigurazione(FISSAGGI, FISSAGGI.getIdVariabileConfig(), "00");
+			if(valoreVarCfg == null)
+				valoreVarCfg = valoreVariabileSchemaConfigurazione(FISSAGGI, FISSAGGI.getIdVariabileConfig(), "000");
+			if(valoreVarCfg != null) {
+				if(!sintesi.toString().contains(FISSAGGI.getIdVariabileConfig())) {
+					sepAdded = false;
+				}
+				aggiungiOSostituisciVariabile(sintesi, FISSAGGI.getIdVariabileConfig(), valoreVarCfg.getPrimoValore(), String.valueOf(valoreVarCfg.getSequenzaValore()));
+				if(!sepAdded) {
+					sintesi.append(PersistentObject.KEY_SEPARATOR);
+					sepAdded = true;
+				}
+			}
+		}
 
 		VariabileSchemaCfg POSIZ_TERMOST = variabileSchemaConfigurazione(schemaCfg, "POSIZ_TERMOST");
 		if(POSIZ_TERMOST != null) {
