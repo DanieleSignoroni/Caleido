@@ -237,7 +237,7 @@ public class YArticoloDatiTecnici extends ArticoloDatiTecnici {
 		return objIdFinitura;
 	}
 
-	public void setColore(ValoreVariabileCfg colore) {
+	public void setPotenzaWatt(ValoreVariabileCfg colore) {
 		String oldObjectKey = getKey();
 		String idAzienda = getIdAzienda();
 		if (colore != null) {
@@ -251,11 +251,11 @@ public class YArticoloDatiTecnici extends ArticoloDatiTecnici {
 		}
 	}
 
-	public ValoreVariabileCfg getColore() {
+	public ValoreVariabileCfg getPotenzaWatt() {
 		return (ValoreVariabileCfg)iPotenzaWatt.getObject();
 	}
 
-	public void setColoreKey(String key) {
+	public void setPotenzaWattKey(String key) {
 		String oldObjectKey = getKey();
 		iPotenzaWatt.setKey(key);
 		String idAzienda = KeyHelper.getTokenObjectKey(key, 1);
@@ -266,47 +266,47 @@ public class YArticoloDatiTecnici extends ArticoloDatiTecnici {
 		}
 	}
 
-	public String getColoreKey() {
+	public String getPotenzaWattKey() {
 		return iPotenzaWatt.getKey();
 	}
 
-	public void setIdSchemaCfgPW(String idSchemaCfgColore) {
+	public void setIdSchemaCfgPW(String idSchemaCfgPotenzaWatt) {
 		String key = iPotenzaWatt.getKey();
-		iPotenzaWatt.setKey(KeyHelper.replaceTokenObjectKey(key , 2, idSchemaCfgColore));
+		iPotenzaWatt.setKey(KeyHelper.replaceTokenObjectKey(key , 2, idSchemaCfgPotenzaWatt));
 		setDirty();
 	}
 
 	public String getIdSchemaCfgPW() {
 		//			String key = iPotenzaWatt.getKey();
-		//			String objIdSchemaCfgColore = KeyHelper.getTokenObjectKey(key,2);
-		//			return objIdSchemaCfgColore;
+		//			String objIdSchemaCfgPotenzaWatt = KeyHelper.getTokenObjectKey(key,2);
+		//			return objIdSchemaCfgPotenzaWatt;
 		return getIdSchemaCfg();
 	}
 
-	public void setIdVariabilePW(String idVariabileConfigColore) {
+	public void setIdVariabilePW(String idVariabileConfigPotenzaWatt) {
 		String key = iPotenzaWatt.getKey();
-		iPotenzaWatt.setKey(KeyHelper.replaceTokenObjectKey(key , 3, idVariabileConfigColore));
+		iPotenzaWatt.setKey(KeyHelper.replaceTokenObjectKey(key , 3, idVariabileConfigPotenzaWatt));
 		setDirty();
 	}
 
 	public String getIdVariabilePW() {
 		String key = iPotenzaWatt.getKey();
-		String objIdVariabileConfigColore = KeyHelper.getTokenObjectKey(key,3);
-		return objIdVariabileConfigColore;
+		String objIdVariabileConfigPotenzaWatt = KeyHelper.getTokenObjectKey(key,3);
+		return objIdVariabileConfigPotenzaWatt;
 	}
 
-	public void setSequenzaValorePW(Short sequenzaValoreColore) {
+	public void setSequenzaValorePW(Short sequenzaValorePotenzaWatt) {
 		String key = iPotenzaWatt.getKey();
-		iPotenzaWatt.setKey(KeyHelper.replaceTokenObjectKey(key , 4, sequenzaValoreColore));
-		if(sequenzaValoreColore != null)
-			setPotenzaWattElettrici(Integer.valueOf(sequenzaValoreColore));
+		iPotenzaWatt.setKey(KeyHelper.replaceTokenObjectKey(key , 4, sequenzaValorePotenzaWatt));
+		if(sequenzaValorePotenzaWatt != null)
+			setPotenzaWattElettrici(Integer.valueOf(sequenzaValorePotenzaWatt));
 		setDirty();
 	}
 
 	public Short getSequenzaValorePW() {
 		String key = iPotenzaWatt.getKey();
-		String objSequenzaValoreColore = KeyHelper.getTokenObjectKey(key,4);
-		return KeyHelper.stringToShortObj(objSequenzaValoreColore);
+		String objSequenzaValorePotenzaWatt = KeyHelper.getTokenObjectKey(key,4);
+		return KeyHelper.stringToShortObj(objSequenzaValorePotenzaWatt);
 	}
 
 	public void setEqual(Copyable obj) throws CopyException {

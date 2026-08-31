@@ -23,6 +23,7 @@ import com.thera.thermfw.persist.KeyHelper;
 import com.thera.thermfw.persist.PersistentObject;
 import com.thera.thermfw.rs.errors.ErrorUtils;
 import com.thera.thermfw.rs.errors.PantheraApiException;
+import com.thera.thermfw.type.EnumType;
 
 import it.caleido.thip.base.articolo.YArticolo;
 import it.caleido.thip.base.articolo.YArticoloDatiTecnici;
@@ -228,6 +229,8 @@ public class ECommerceService {
 			}
 		}
 
+		boolean sepAdded = false;
+
 		//..Ora le parti parametrizzate (fisse)
 
 		Configurazione confTempo = (Configurazione) Factory.createObject(Configurazione.class);
@@ -244,7 +247,21 @@ public class ECommerceService {
 
 		VariabileSchemaCfg OPERAZ_ELETTRIF = variabileSchemaConfigurazione(schemaCfg, "OPERAZ.ELETTRIF");
 		if(OPERAZ_ELETTRIF != null) {
-			sintesi.append(OPERAZ_ELETTRIF.getIdVariabileConfig()).append(PersistentObject.KEY_SEPARATOR).append("S");
+			if(!sepAdded) {
+				sintesi.append(PersistentObject.KEY_SEPARATOR);
+				sepAdded = true;
+			}
+			ValoreVariabileCfg valoreVarCfg = valoreVariabileSchemaConfigurazione(OPERAZ_ELETTRIF, OPERAZ_ELETTRIF.getIdVariabileConfig(), "S");
+			if(valoreVarCfg != null) {
+				if(!sintesi.toString().contains(OPERAZ_ELETTRIF.getIdVariabileConfig())) {
+					sepAdded = false;
+				}
+				aggiungiOSostituisciVariabile(sintesi, OPERAZ_ELETTRIF.getIdVariabileConfig(), valoreVarCfg.getPrimoValore(), String.valueOf(valoreVarCfg.getSequenzaValore()));
+				if(!sepAdded) {
+					sintesi.append(PersistentObject.KEY_SEPARATOR);
+					sepAdded = true;
+				}
+			}
 		}
 
 		VariabileSchemaCfg POSIZ_TERMOST = variabileSchemaConfigurazione(schemaCfg, "POSIZ_TERMOST");
@@ -254,11 +271,45 @@ public class ECommerceService {
 					&& ((YArticoloDatiTecnici)articolo.getArticoloDatiTecnici()).getDestroOSinistro() != '-') {
 				char destroOSinistro =((YArticoloDatiTecnici) articolo.getArticoloDatiTecnici()).getDestroOSinistro();
 
+				EnumType etDxOrSx = EnumType.getEnumTypeInstance("PosizTermostato", EnumType.class);
+
 				if (destroOSinistro != '-') {
-					aggiungiOSostituisciVariabile(sintesi, POSIZ_TERMOST.getIdVariabileConfig(),String.valueOf(destroOSinistro));
+					if(!sepAdded) {
+						sintesi.append(PersistentObject.KEY_SEPARATOR);
+						sepAdded = true;
+					}
+					//Così e non (etDxOrSx.descriptionFromValue) perche' l'enumerato e' stato codificato male
+					String posizione = (String) etDxOrSx.getAttValueDescriptions().get(Integer.valueOf(String.valueOf(destroOSinistro)));
+					ValoreVariabileCfg valoreVarCfg = valoreVariabileSchemaConfigurazionePVAL(POSIZ_TERMOST, POSIZ_TERMOST.getIdVariabileConfig(), posizione);
+					if(valoreVarCfg != null) {
+						if(!sintesi.toString().contains(POSIZ_TERMOST.getIdVariabileConfig())) {
+							sepAdded = false;
+						}
+						aggiungiOSostituisciVariabile(sintesi, POSIZ_TERMOST.getIdVariabileConfig(), valoreVarCfg.getPrimoValore(), String.valueOf(valoreVarCfg.getSequenzaValore()));
+						if(!sepAdded) {
+							sintesi.append(PersistentObject.KEY_SEPARATOR);
+							sepAdded = true;
+						}
+					}
 				}
 			}
 		}
+
+		//Potenza Watt <
+		if(articolo instanceof YArticolo
+				&& articolo.getArticoloDatiTecnici() instanceof YArticoloDatiTecnici
+				&& ((YArticoloDatiTecnici)articolo.getArticoloDatiTecnici()).getVariabilePotenza() != null) {
+			ValoreVariabileCfg POTENZA_WATT = ((YArticoloDatiTecnici)articolo.getArticoloDatiTecnici()).getPotenzaWatt();
+			if(POTENZA_WATT != null) {
+				if(!sepAdded) {
+					sintesi.append(PersistentObject.KEY_SEPARATOR);
+					sepAdded = true;
+				}
+				sintesi.append(POTENZA_WATT.getIdVariabileConfig()).append(PersistentObject.KEY_SEPARATOR).append(POTENZA_WATT.getPrimoValore()).append(PersistentObject.KEY_SEPARATOR).append(POTENZA_WATT.getSequenzaValore());
+			}
+		}
+		//Potenza Watt >
+
 
 		return sintesi.toString();
 	}
@@ -266,28 +317,38 @@ public class ECommerceService {
 	public void aggiungiOSostituisciVariabile(
 			StringBuilder sintesi,
 			String idVariabile,
-			String valore) {
+			String valore,
+			String sequenza) {
 
-		String keySeparator = PersistentObject.KEY_SEPARATOR;
-		String separator = ColonneFiltri.SEP;
+		String separator = PersistentObject.KEY_SEPARATOR;
 
-		String prefisso = idVariabile + keySeparator;
-
-		String[] configurazioni = sintesi.toString().split(
-				java.util.regex.Pattern.quote(separator)
+		String[] elementi = sintesi.toString().split(
+				java.util.regex.Pattern.quote(separator),
+				-1
 				);
 
 		StringBuilder nuovaSintesi = new StringBuilder();
 		boolean sostituita = false;
 
-		for (String configurazione : configurazioni) {
+		/*
+		 * La sintesi è composta da terne:
+		 *
+		 * VARIABILE + sep + VALORE + sep + SEQUENZA
+		 *
+		 * Esempio:
+		 * FASCIA + sep + Fascia C + sep + 4 +
+		 * sep +
+		 * COLORE + sep + Grigio 9022 Pearl Gr + sep + 32
+		 */
+		for (int i = 0; i + 2 < elementi.length; i += 3) {
 
-			if (configurazione.isEmpty()) {
-				continue;
-			}
+			String variabileCorrente = elementi[i];
+			String valoreCorrente = elementi[i + 1];
+			String sequenzaCorrente = elementi[i + 2];
 
-			if (configurazione.startsWith(prefisso)) {
-				configurazione = prefisso + valore;
+			if (variabileCorrente.equals(idVariabile)) {
+				valoreCorrente = valore;
+				sequenzaCorrente = sequenza;
 				sostituita = true;
 			}
 
@@ -295,18 +356,27 @@ public class ECommerceService {
 				nuovaSintesi.append(separator);
 			}
 
-			nuovaSintesi.append(configurazione);
+			nuovaSintesi
+			.append(variabileCorrente)
+			.append(separator)
+			.append(valoreCorrente)
+			.append(separator)
+			.append(sequenzaCorrente);
 		}
 
+		// Se la variabile non era presente, aggiungo l'intera terna
 		if (!sostituita) {
+
 			if (nuovaSintesi.length() > 0) {
 				nuovaSintesi.append(separator);
 			}
 
 			nuovaSintesi
 			.append(idVariabile)
-			.append(keySeparator)
-			.append(valore);
+			.append(separator)
+			.append(valore)
+			.append(separator)
+			.append(sequenza);
 		}
 
 		sintesi.setLength(0);
