@@ -144,7 +144,7 @@ public class ECommerceService {
 						rc = BODataCollector.OK;
 					}else {
 
-						if (rc != BODataCollector.OK) {
+						if (rc == BODataCollector.ERROR) {
 							errors.addAll(boDCC.getErrorList().getErrors());
 							return buildResponse(Status.BAD_REQUEST, errors);
 						}else {
@@ -221,23 +221,27 @@ public class ECommerceService {
 			ErrorMessage err = new ErrorMessage("BAS0000000");
 			aggiungiComponenteInErrore("IdArticolo", "Articolo", boDCArt, err);
 			errors.add(err);
+			return errors;
 		}
 
 		if (!bodyAsJSON.has("Variabili")) {
 			ErrorMessage err = new ErrorMessage("BAS0000078", "Indicare le variabili di configurazione");
 			errors.add(err);
+			return errors;
 		}
 
 		if (!bodyAsJSON.has("IdCliente")) {
 			ErrorMessage err = new ErrorMessage("BAS0000000");
 			aggiungiComponenteInErrore("IdCliente", "ClienteVendita", boDCCLI, err);
 			errors.add(err);
+			return errors;
 		}
 
 		int rc = boDCArt.initSecurityServices(OpenType.UPDATE, true, true, true);
 
-		if (rc != BODataCollector.OK) {
+		if (rc == BODataCollector.ERROR) {
 			errors.addAll(boDCArt.getErrorList().getErrors());
+			return errors;
 		}
 
 		rc = boDCArt.retrieve(
@@ -246,18 +250,19 @@ public class ECommerceService {
 						bodyAsJSON.getString("IdArticolo")
 				}));
 
-		if (rc != BODataCollector.OK) {
+		if (rc == BODataCollector.ERROR) {
 			errors.addAll(boDCArt.getErrorList().getErrors());
+			return errors;
 		}
-
 		rc = boDCCLI.retrieve(
 				KeyHelper.buildObjectKey(new String[] {
 						Azienda.getAziendaCorrente(),
 						bodyAsJSON.getString("IdCliente")
 				}));
 
-		if (rc != BODataCollector.OK) {
+		if (rc == BODataCollector.ERROR) {
 			errors.addAll(boDCCLI.getErrorList().getErrors());
+			return errors;
 		}
 
 		Articolo articolo = (Articolo) boDCArt.getBo();
