@@ -119,6 +119,7 @@ public class ECommerceService {
 					conf.getDescrizione().setDescrizione(".");
 					conf.getDescrizione().setDescrizioneRidotta(".");
 					conf.setIdConfigurazione(new Integer(0));
+					conf.setOnDB(false);
 
 					SezioneConfigurazione sezConferma = conf.getSezioneCfg(Configurazione.ID_SEZ_CONFERMA);
 					if(sezConferma != null)
