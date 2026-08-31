@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 
@@ -232,7 +233,7 @@ public class ECommerceService {
 
 		if (!bodyAsJSON.has("IdCliente")) {
 			ErrorMessage err = new ErrorMessage("BAS0000000");
-			aggiungiComponenteInErrore("IdCliente", "ClienteVendita", boDCCLI, err);
+			aggiungiComponenteInErrore("IdCliente", "Cliente", boDCCLI, err);
 			errors.add(err);
 			return errors;
 		}
@@ -252,6 +253,12 @@ public class ECommerceService {
 
 		if (rc == BODataCollector.ERROR) {
 			errors.addAll(boDCArt.getErrorList().getErrors());
+			for (Iterator iterator = errors.iterator(); iterator.hasNext();) {
+				ErrorMessage em = (ErrorMessage) iterator.next();
+				if(em.getId().equals("BAS0000004")) {
+					aggiungiComponenteInErrore("IdArticolo", "Articolo", boDCArt, em);
+				}
+			}
 			return errors;
 		}
 		rc = boDCCLI.retrieve(
@@ -262,6 +269,12 @@ public class ECommerceService {
 
 		if (rc == BODataCollector.ERROR) {
 			errors.addAll(boDCCLI.getErrorList().getErrors());
+			for (Iterator iterator = errors.iterator(); iterator.hasNext();) {
+				ErrorMessage em = (ErrorMessage) iterator.next();
+				if(em.getId().equals("BAS0000004")) {
+					aggiungiComponenteInErrore("IdCliente", "Cliente", boDCArt, em);
+				}
+			}
 			return errors;
 		}
 
@@ -766,10 +779,13 @@ public class ECommerceService {
 	 */
 	public void aggiungiComponenteInErrore(String attributeName, String className, BODataCollector bodc, ErrorMessage errorMessage) throws NoSuchElementException, NoSuchFieldException {
 		ClassADCollection cad = ClassADCollectionManager.collectionWithName(className);
-		String label = cad.getAttribute(attributeName).getAttributeNameNLS();
+		String label = cad.getClassNameNLS() + " - " + cad.getAttribute(attributeName).getAttributeNameNLS();
+		if(errorMessage.getId().equals("BAS0000004")) {
+			label = cad.getClassNameNLS();
+		}
 		errorMessage.addComponent(attributeName, label, bodc.getComponent(attributeName));
 	}
-
+	
 	protected BODataCollector createDataCollector(String classname) {
 		try {
 			ClassADCollection hdr = ClassADCollectionManager.collectionWithName(classname);
