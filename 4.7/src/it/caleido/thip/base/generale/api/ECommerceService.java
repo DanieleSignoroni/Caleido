@@ -1,5 +1,6 @@
 package it.caleido.thip.base.generale.api;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,10 +15,12 @@ import org.json.JSONObject;
 
 import com.thera.thermfw.ad.ClassADCollection;
 import com.thera.thermfw.ad.ClassADCollectionManager;
+import com.thera.thermfw.base.TimeUtils;
 import com.thera.thermfw.base.Trace;
 import com.thera.thermfw.collector.BODataCollector;
 import com.thera.thermfw.common.ErrorMessage;
 import com.thera.thermfw.gui.cnr.OpenType;
+import com.thera.thermfw.persist.ConnectionManager;
 import com.thera.thermfw.persist.Factory;
 import com.thera.thermfw.persist.KeyHelper;
 import com.thera.thermfw.persist.PersistentObject;
@@ -30,6 +33,8 @@ import it.caleido.thip.base.articolo.YArticoloDatiTecnici;
 import it.caleido.thip.vendite.generaleVE.YModificaConfigurazioneRigaVendita;
 import it.thera.thip.base.articolo.Articolo;
 import it.thera.thip.base.azienda.Azienda;
+import it.thera.thip.base.generale.Numeratore;
+import it.thera.thip.base.generale.NumeratoreHandler;
 import it.thera.thip.cs.ColonneFiltri;
 import it.thera.thip.cs.DatiComuniEstesi;
 import it.thera.thip.datiTecnici.configuratore.Configurazione;
@@ -40,6 +45,8 @@ import it.thera.thip.datiTecnici.configuratore.SezioneConfigurazione;
 import it.thera.thip.datiTecnici.configuratore.ValoreVariabileCfg;
 import it.thera.thip.datiTecnici.configuratore.ValoreVariabileCfgTM;
 import it.thera.thip.datiTecnici.configuratore.VariabileSchemaCfg;
+import it.thera.thip.vendite.offerteCliente.OffertaCliente;
+import it.thera.thip.vendite.offerteCliente.OffertaClienteRigaPrm;
 
 /**
  * <p></p>
@@ -156,9 +163,9 @@ public class ECommerceService {
 					return buildResponse(Status.BAD_REQUEST, errors);
 				}
 
-				Configurazione existingConf = YModificaConfigurazioneRigaVendita.leggiConfigurazione(articolo.getIdAzienda(), articolo.getIdArticolo(), sintesiConfigGUI);
-				if(existingConf == null) {
-					Configurazione conf = (Configurazione) boDCC.getBo();
+				Configurazione conf = YModificaConfigurazioneRigaVendita.leggiConfigurazione(articolo.getIdAzienda(), articolo.getIdArticolo(), sintesiConfigGUI);
+				if(conf == null) {
+					conf = (Configurazione) boDCC.getBo();
 					conf.setIdAzienda(Azienda.getAziendaCorrente());
 					conf.setIdArticolo(articolo.getIdArticolo());
 					conf.setSchemaCfg(articolo.getSchemaCfg());
@@ -179,12 +186,60 @@ public class ECommerceService {
 
 					rc = boDCC.save();
 
-					if (rc != BODataCollector.OK) {
-						errors.addAll(boDCC.getErrorList().getErrors());
-						return buildResponse(Status.BAD_REQUEST, errors);
+					if(rc == BODataCollector.ERROR
+							&& boDCC.getErrorList().getErrors().size() == 1
+							&& ((ErrorMessage)boDCC.getErrorList().getErrors().get(0)).getId().equals("THIP_BS051")) {
+						conf = conf.getConfigurazioneEquivalente();
+						rc = BODataCollector.OK;
 					}else {
-						confCreated = true;
-						keyConfCreated = KeyHelper.formatKeyString(boDCC.getBo().getKey());
+
+						if (rc != BODataCollector.OK) {
+							errors.addAll(boDCC.getErrorList().getErrors());
+							return buildResponse(Status.BAD_REQUEST, errors);
+						}else {
+							confCreated = true;
+							keyConfCreated = KeyHelper.formatKeyString(boDCC.getBo().getKey());
+						}
+					}
+				}
+
+				//Passo alla creazione della riga off per avere i prezzi
+				if(conf != null) {
+					ConnectionManager.pushConnection();
+					OffertaCliente off = null;
+					try {
+						off = creaOffertaCliente("OFFERTE_CLI", "IT", "O01", bodyAsJSON.getString("IdCliente"));
+						if(off != null) {
+							rc = off.save();
+							if(rc > 0) {
+								OffertaClienteRigaPrm riga = creaOffertaClienteRigaPrm(off, articolo, conf);
+								if(riga != null) {
+									rc = riga.save();
+									if(rc > 0) {
+										BigDecimal prezzo = riga.getPrezzo();
+										if(prezzo != null) {
+											boolean s = true;
+										}
+									}
+								}
+							}
+						}
+						off.retrieve();
+						rc = off.delete();
+						if(rc > 0) {
+							NumeratoreHandler numeratore = off.getNumeratoreHandler();
+							NumeratoreHandler.ripristinaProgressivo(numeratore.getIdAzienda(), numeratore.getIdNumeratore(),
+									numeratore.getIdSerie(), numeratore.getAnno(), numeratore.getNumero().intValue());
+							ConnectionManager.commit();
+						}
+					}catch (Exception e) {
+						if(off != null) {
+							NumeratoreHandler numeratore = off.getNumeratoreHandler();
+							NumeratoreHandler.ripristinaProgressivo(numeratore.getIdAzienda(), numeratore.getIdNumeratore(),
+									numeratore.getIdSerie(), numeratore.getAnno(), numeratore.getNumero().intValue());
+						}
+					}finally {
+						ConnectionManager.popConnection();
 					}
 				}
 			}
@@ -205,6 +260,33 @@ public class ECommerceService {
 			response.getJSONObject("response").put("keyConfCreated", keyConfCreated);
 		}
 		return response;
+	}
+
+	public OffertaCliente creaOffertaCliente(String idNumeratore, String idSerie, String idCau, String idCliente) {
+		OffertaCliente offerta = (OffertaCliente) Factory.createObject(OffertaCliente.class);
+		offerta.setIdAzienda(Azienda.getAziendaCorrente());
+		offerta.getNumeratoreHandler().setDataDocumento(TimeUtils.getCurrentDate());
+		offerta.getNumeratoreHandler().setIdNumeratore(idNumeratore);
+		offerta.getNumeratoreHandler().setIdSerie(idSerie);
+		offerta.setIdCau(idCau);
+		offerta.setIdCliente(idCliente);
+		offerta.setTipoIntestatarioOfferta(OffertaCliente.TIPO_INTESTATARIO_CLIENTE);
+		offerta.completaBO();
+		return offerta;
+	}
+
+	public OffertaClienteRigaPrm creaOffertaClienteRigaPrm(OffertaCliente offerta, Articolo articolo, Configurazione conf) {
+		OffertaClienteRigaPrm riga = (OffertaClienteRigaPrm) Factory.createObject(OffertaClienteRigaPrm.class);
+		riga.setTestata(offerta);
+		riga.setIdAzienda(Azienda.getAziendaCorrente());
+		riga.setIdCauRig(offerta.getCausale().getIdCausaleRigaOffertaVen());
+		riga.setArticolo(articolo);
+		riga.setConfigurazione(conf);
+		riga.setIdUMRif(articolo.getIdUMRiferimento());
+		riga.cambiaArticolo(articolo, conf, true);
+		riga.getQuantitaOffertaVen().setQuantitaInUMPrm(BigDecimal.ONE);
+		riga.getQuantitaOffertaVen().setQuantitaInUMRif(BigDecimal.ONE);
+		return riga;
 	}
 
 	public String costruisciSintesiConfigurazioneGUI(JSONObject bodyAsJSON, SchemaCfg schemaCfg, Articolo articolo) throws PantheraApiException {
