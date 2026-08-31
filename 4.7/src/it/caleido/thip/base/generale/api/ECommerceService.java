@@ -1,6 +1,7 @@
 package it.caleido.thip.base.generale.api;
 
 import java.math.BigDecimal;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,6 +21,7 @@ import com.thera.thermfw.base.Trace;
 import com.thera.thermfw.collector.BODataCollector;
 import com.thera.thermfw.common.ErrorMessage;
 import com.thera.thermfw.gui.cnr.OpenType;
+import com.thera.thermfw.persist.CachedStatement;
 import com.thera.thermfw.persist.ConnectionManager;
 import com.thera.thermfw.persist.Factory;
 import com.thera.thermfw.persist.KeyHelper;
@@ -31,6 +33,7 @@ import com.thera.thermfw.type.EnumType;
 import it.caleido.thip.base.articolo.YArticolo;
 import it.caleido.thip.base.articolo.YArticoloDatiTecnici;
 import it.caleido.thip.base.connettori.utils.YPsnDatiEcommerce;
+import it.caleido.thip.datiTecnici.configuratore.YFasceColoriTM;
 import it.caleido.thip.datiTecnici.configuratore.YModelloTermostato;
 import it.caleido.thip.datiTecnici.configuratore.YModelloTermostatoTM;
 import it.caleido.thip.vendite.generaleVE.YModificaConfigurazioneRigaVendita;
@@ -363,7 +366,27 @@ public class ECommerceService {
 				}
 			}
 		}
-		
+
+		//Per calcolare la FASCIA ho bisogno del colore
+		VariabileSchemaCfg FASCIA = variabileSchemaConfigurazione(schemaCfg, "FASCIA");
+		if(FASCIA != null && sintesi.toString().contains("COLORE")) {
+			if(!sepAdded) {
+				sintesi.append(PersistentObject.KEY_SEPARATOR);
+				sepAdded = true;
+			}
+			ValoreVariabileCfg valoreVarCfg = ricercaFasciaColore(schemaCfg, FASCIA, getValoreVariabile(bodyAsJSON, "COLORE"));
+			if(valoreVarCfg != null) {
+				if(!sintesi.toString().contains(FASCIA.getIdVariabileConfig())) {
+					sepAdded = false;
+				}
+				aggiungiOSostituisciVariabile(sintesi, FASCIA.getIdVariabileConfig(), valoreVarCfg.getPrimoValore(), String.valueOf(valoreVarCfg.getSequenzaValore()));
+				if(!sepAdded) {
+					sintesi.append(PersistentObject.KEY_SEPARATOR);
+					sepAdded = true;
+				}
+			}
+		}
+
 		VariabileSchemaCfg FISSAGGI = variabileSchemaConfigurazione(schemaCfg, "FISSAGGI");
 		if(FISSAGGI != null) {
 			if(!sepAdded) {
@@ -478,6 +501,60 @@ public class ECommerceService {
 		return sintesi.toString();
 	}
 
+	public ValoreVariabileCfg ricercaFasciaColore(SchemaCfg schemaCfg, VariabileSchemaCfg fASCIA, String carCodCfgColore) {
+		ValoreVariabileCfg varCfg = null;
+		ResultSet rs = null;
+		CachedStatement cs = null;
+		try {
+
+			String select = "SELECT\r\n"
+					+ "	*\r\n"
+					+ "FROM\r\n"
+					+ "	THIPPERS.YFASCE_COLORI FC\r\n"
+					+ "INNER JOIN THIP.VALORI_VAR_CFG VC\r\n"
+					+ "ON\r\n"
+					+ "	FC.ID_AZIENDA = VC.ID_AZIENDA\r\n"
+					+ "	AND FC.ID_SCHEMA_CFG_COLORE = VC.ID_SCHEMA_CFG\r\n"
+					+ "	AND FC.ID_VARIABILE_CONFIG_COLORE = VC.ID_VARIABILE_CFG\r\n"
+					+ "	AND FC.SEQUENZA_VALORE_COLORE = VC.SEQ_VALORE";
+
+			String where = " FC."+YFasceColoriTM.ID_AZIENDA+" = '"+Azienda.getAziendaCorrente()+"' ";
+			where += " AND "+YFasceColoriTM.ID_VARIABILE_CONFIG_FASCIA+" = '"+fASCIA.getIdVariabileConfig()+"' ";
+			where += " AND "+YFasceColoriTM.ID_SCHEMA_CFG_FASCIA+" = '"+schemaCfg.getIdSchemaCfg()+"' ";
+
+			where += " AND "+YFasceColoriTM.ID_VARIABILE_CONFIG_COLORE+" = 'COLORE' ";
+			where += " AND "+YFasceColoriTM.ID_SCHEMA_CFG_FASCIA+" = '"+schemaCfg.getIdSchemaCfg()+"' ";
+
+			where += " AND "+YFasceColoriTM.ID_SCHEMA_CFG_FASCIA+" = '"+schemaCfg.getIdSchemaCfg()+"' ";
+
+			where += " AND VC.CAR_COD_CFG = '"+carCodCfgColore+"' ";
+
+			cs = new CachedStatement(select + " WHERE " + where); 
+			rs = cs.executeQuery();
+			if(rs.next()) {
+				varCfg = (ValoreVariabileCfg) ValoreVariabileCfg.elementWithKey(ValoreVariabileCfg.class, KeyHelper.buildObjectKey(new String[] {
+						rs.getString(YFasceColoriTM.ID_AZIENDA),
+						rs.getString(YFasceColoriTM.ID_SCHEMA_CFG_FASCIA),
+						rs.getString(YFasceColoriTM.ID_VARIABILE_CONFIG_FASCIA),
+						rs.getString(YFasceColoriTM.SEQUENZA_VALORE_FASCIA)
+				}), PersistentObject.NO_LOCK);	
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace(Trace.excStream);
+		}finally {
+			try {
+				if(rs != null)
+					rs.close();
+				if(cs != null)
+					cs.free();
+			}catch (SQLException e) {
+				e.printStackTrace(Trace.excStream);
+			}
+		}
+		return varCfg;
+	}
+
 	@SuppressWarnings("rawtypes")
 	public ValoreVariabileCfg ricercaModelloTermostato(JSONObject bodyAsJSON, SchemaCfg schemaCfg, String valore) {
 		try {
@@ -578,6 +655,20 @@ public class ECommerceService {
 
 		sintesi.setLength(0);
 		sintesi.append(nuovaSintesi);
+	}
+	
+	public String getValoreVariabile(JSONObject bodyAsJSON, String idVariabile) {
+	    JSONArray variabili = bodyAsJSON.getJSONArray("Variabili");
+
+	    for (int i = 0; i < variabili.length(); i++) {
+	        JSONObject variabile = variabili.getJSONObject(i);
+
+	        if (variabile.has(idVariabile)) {
+	            return variabile.getString(idVariabile);
+	        }
+	    }
+
+	    return null;
 	}
 
 	public MacroConfigurazione macroSchemaConfigurazione(SchemaCfg schemaCfg, String idMacro) {
