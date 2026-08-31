@@ -81,6 +81,7 @@ public class ECommerceService {
 			JSONObject bodyAsJSON = new JSONObject(body);
 
 			BODataCollector boDCArt = createDataCollector("Articolo");
+			BODataCollector boDCCLI = createDataCollector("ClienteVendita");
 
 			if (!bodyAsJSON.has("IdArticolo")) {
 				ErrorMessage err = new ErrorMessage("BAS0000000");
@@ -92,6 +93,14 @@ public class ECommerceService {
 
 			if (!bodyAsJSON.has("Variabili")) {
 				ErrorMessage err = new ErrorMessage("BAS0000078", "Indicare le variabili di configurazione");
+				errors.add(err);
+
+				return buildResponse(Status.BAD_REQUEST, errors);
+			}
+
+			if (!bodyAsJSON.has("IdCliente")) {
+				ErrorMessage err = new ErrorMessage("BAS0000000");
+				aggiungiComponenteInErrore("IdCliente", "ClienteVendita", boDCArt, err);
 				errors.add(err);
 
 				return buildResponse(Status.BAD_REQUEST, errors);
@@ -112,6 +121,17 @@ public class ECommerceService {
 
 			if (rc != BODataCollector.OK) {
 				errors.addAll(boDCArt.getErrorList().getErrors());
+				return buildResponse(Status.BAD_REQUEST, errors);
+			}
+
+			rc = boDCCLI.retrieve(
+					KeyHelper.buildObjectKey(new String[] {
+							Azienda.getAziendaCorrente(),
+							bodyAsJSON.getString("IdCliente")
+					}));
+
+			if (rc != BODataCollector.OK) {
+				errors.addAll(boDCCLI.getErrorList().getErrors());
 				return buildResponse(Status.BAD_REQUEST, errors);
 			}
 
@@ -166,8 +186,6 @@ public class ECommerceService {
 						confCreated = true;
 						keyConfCreated = KeyHelper.formatKeyString(boDCC.getBo().getKey());
 					}
-				}else {
-					boolean stop = true;
 				}
 			}
 
