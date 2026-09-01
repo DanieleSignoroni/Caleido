@@ -57,6 +57,12 @@ import it.thera.thip.vendite.ordineVE.OrdineVenditaRigaPrm;
  * <p></p>
  */
 
+/*
+ * Revisions:
+ * Number   Date        Owner    Description
+ * 72630    01/09/2026  DSSOF3   Modificare visibilita' metodo.
+ */
+
 public class YModificaConfigurazioneRigaVendita extends BusinessObjectAdapter implements Authorizable,SaveConWarning {
 
 	public static final String STMT_SELECT_EXISTING_CONFIG = "SELECT * FROM "+ConfigurazioneTM.TABLE_NAME+" CFG "
@@ -330,6 +336,8 @@ public class YModificaConfigurazioneRigaVendita extends BusinessObjectAdapter im
 		return sintesiGUIMap;
 	}
 
+	//72630 modificare in public
+	//protected static Configurazione leggiConfigurazione(String idAzienda,String idArticolo,String sintesiConfigurazione) throws SQLException{
 	public static Configurazione leggiConfigurazione(String idAzienda,String idArticolo,String sintesiConfigurazione) throws SQLException{
 		ResultSet rs = null;
 		Configurazione conf = null;

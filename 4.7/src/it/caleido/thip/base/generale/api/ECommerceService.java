@@ -67,7 +67,7 @@ import it.thera.thip.vendite.offerteCliente.OffertaClienteRigaPrm;
 /*
  * Revisions:
  * Number   Date        Owner    Description
- * 72XXX    28/08/2026  DSSOF3   Prima stesura
+ * 72630    28/08/2026  DSSOF3   Prima stesura
  */
 
 public class ECommerceService {

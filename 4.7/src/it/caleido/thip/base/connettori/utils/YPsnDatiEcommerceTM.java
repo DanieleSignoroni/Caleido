@@ -21,7 +21,7 @@ import it.thera.thip.cs.DatiComuniEstesiTTM;
 /*
  * Revisions:
  * Number   Date        Owner    Description
- * 72XXX    31/08/2026  DSSOF3   Prima stesura
+ * 72630    31/08/2026  DSSOF3   Prima stesura
  */
 
 public class YPsnDatiEcommerceTM extends TableManager {

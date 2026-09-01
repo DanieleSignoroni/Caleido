@@ -16,6 +16,7 @@ import com.thera.thermfw.base.*;
  * Revisions:
  * Number   Date        Owner    Description
  * 72321    28/01/2026  GLSOF3   Prima stesura
+ * 72630	01/09/2026	DSSOF3	 Aggiunta colonne.
  */
 public class YArticoloDatiTecniciTM extends ArticoloDatiTecniciTM {
 
@@ -35,8 +36,10 @@ public class YArticoloDatiTecniciTM extends ArticoloDatiTecniciTM {
 
 	public static final String R_FINITURA = "R_FINITURA";
 
+	//72630 <
 	public static final String ID_SCHEMA_CFG_POTENZAW = "R_SCHEMA_CFG_POTENZAW";
 	public static final String ID_VARIABILE_CONFIG_POTENZAW = "R_VARIABILE_CONFIG_POTENZAW";
+	//72630 >
 
 	public static final String TABLE_NAME_EXT = SystemParam.getSchema("THIPPERS") + "YARTICOLI";
 
@@ -63,9 +66,11 @@ public class YArticoloDatiTecniciTM extends ArticoloDatiTecniciTM {
 		addAttributeOnTable("IdModelloTermostato", R_MODELLO_TERMOSTATO, TABLE_NAME_EXT);
 		addAttributeOnTable("IdFinitura", R_FINITURA, TABLE_NAME_EXT);
 		
+		//72630 <
 		addAttributeOnTable("IdSchemaCfgPW", ID_SCHEMA_CFG_POTENZAW, TABLE_NAME_EXT);
 		addAttributeOnTable("IdVariabilePW", ID_VARIABILE_CONFIG_POTENZAW, TABLE_NAME_EXT);
 		addAttributeOnTable("SequenzaValorePW", POTENZA_WATT_ELETTRICI, "getShortObject", TABLE_NAME_EXT);
+		//72630 >
 	}
 
 }

@@ -21,7 +21,7 @@ import it.thera.thip.base.articolo.web.ArticoloDatiTecniciFormModifier;
 /*
  * Revisions:
  * Number   Date        Owner    Description
- * 72XXX    28/08/2026  DSSOF3   Prima stesura
+ * 72630    28/08/2026  DSSOF3   Prima stesura
  */
 
 public class YArticoloDatiTecniciFormModifier extends ArticoloDatiTecniciFormModifier {

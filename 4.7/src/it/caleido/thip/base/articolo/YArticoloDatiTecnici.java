@@ -24,6 +24,7 @@ import it.thera.thip.datiTecnici.configuratore.VariabileSchemaCfg;
  * 72321    28/01/2026  GLSOF3   Prima stesura
  * 72356    23/02/2026  GLSOF3   Set a 2 dei campi OrizzontaleOVerticale e DestroSinistro
  * 72588    24/07/2026  GLSOF3   Correzione package YModelloTermostato
+ * 72630	01/09/2026	DSSOF3	 Aggiunta proxy.
  */
 public class YArticoloDatiTecnici extends ArticoloDatiTecnici {
 
@@ -43,7 +44,7 @@ public class YArticoloDatiTecnici extends ArticoloDatiTecnici {
 
 	protected Proxy iFinitura = new Proxy(it.caleido.thip.base.articolo.YFinitura.class);
 
-	protected Proxy iPotenzaWatt = new Proxy(it.thera.thip.datiTecnici.configuratore.ValoreVariabileCfg.class);
+	protected Proxy iPotenzaWatt = new Proxy(it.thera.thip.datiTecnici.configuratore.ValoreVariabileCfg.class); //72630
 
 	public YArticoloDatiTecnici() {
 		setOrizzontaleOVerticale('2');
@@ -237,6 +238,7 @@ public class YArticoloDatiTecnici extends ArticoloDatiTecnici {
 		return objIdFinitura;
 	}
 
+	//72630 <
 	public void setPotenzaWatt(ValoreVariabileCfg colore) {
 		String oldObjectKey = getKey();
 		String idAzienda = getIdAzienda();
@@ -308,6 +310,7 @@ public class YArticoloDatiTecnici extends ArticoloDatiTecnici {
 		String objSequenzaValorePotenzaWatt = KeyHelper.getTokenObjectKey(key,4);
 		return KeyHelper.stringToShortObj(objSequenzaValorePotenzaWatt);
 	}
+	//72630 >
 
 	public void setEqual(Copyable obj) throws CopyException {
 		super.setEqual(obj);
@@ -330,12 +333,15 @@ public class YArticoloDatiTecnici extends ArticoloDatiTecnici {
 			String key3 = iFinitura.getKey();
 			iFinitura.setKey(KeyHelper.replaceTokenObjectKey(key3, 1, idAzienda));
 		}
+		//72630 <
 		if(iPotenzaWatt != null) {
 			String key4 = iPotenzaWatt.getKey();
 			iPotenzaWatt.setKey(KeyHelper.replaceTokenObjectKey(key4, 1, idAzienda));
 		}
+		//72630 >
 	}
 
+	//72630 <
 	public VariabileSchemaCfg getVariabilePotenza() {
 		try {
 			return (VariabileSchemaCfg) VariabileSchemaCfg.elementWithKey(VariabileSchemaCfg.class, KeyHelper.buildObjectKey(new String[] {
@@ -346,6 +352,7 @@ public class YArticoloDatiTecnici extends ArticoloDatiTecnici {
 		}
 		return null;
 	}
+	//72630 >
 
 }
 
