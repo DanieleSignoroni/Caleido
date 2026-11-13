@@ -47,7 +47,10 @@ public abstract class YPsnDatiEcommercePO extends EntitaAzienda implements Busin
 
 	private static YPsnDatiEcommerce cInstance;
 
-	// Solo la prima chiave della figlia (IdAzienda) appartiene alla principale.
+	protected Integer iOrizzonteDataConsegna;
+
+	protected Integer iGiorniValiditaOfferta;
+
 	protected OneToMany iSerieNumeratori = new OneToMany(YPsnDatiEcommerceSerie.class, this, 1, false);
 
 	protected OneToMany iCausali = new OneToMany(YPsnDatiEcommerceCausale.class, this, 1, false);
@@ -78,6 +81,24 @@ public abstract class YPsnDatiEcommercePO extends EntitaAzienda implements Busin
 
 	public YPsnDatiEcommercePO() {
 		setIdAzienda(Azienda.getAziendaCorrente());
+	}
+
+	public Integer getOrizzonteDataConsegna() {
+		return iOrizzonteDataConsegna;
+	}
+
+	public void setOrizzonteDataConsegna(Integer orizzonteDataConsegna) {
+		iOrizzonteDataConsegna = orizzonteDataConsegna;
+		setDirty();
+	}
+
+	public Integer getGiorniValiditaOfferta() {
+		return iGiorniValiditaOfferta;
+	}
+
+	public void setGiorniValiditaOfferta(Integer giorniValiditaOfferta) {
+		iGiorniValiditaOfferta = giorniValiditaOfferta;
+		setDirty();
 	}
 
 	public void setRelserieoffven(Serie relserieoffven) {

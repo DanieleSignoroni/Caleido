@@ -149,82 +149,127 @@
 											</legend>
 											<table style="width: 100%;">
 												<tr>
-													<td valign="top"><%{  WebLabelCompound label = new com.thera.thermfw.web.WebLabelCompound(null, null, "YPsnDatiEcommerce", "RSerieOffVen", null); 
+													<td style="display: none;">
+														<table>
+															<tr>
+																<td valign="top"><%{  WebLabelCompound label = new com.thera.thermfw.web.WebLabelCompound(null, null, "YPsnDatiEcommerce", "RSerieOffVen", null); 
    label.setParent(YPsnDatiEcommerceForm); 
 %><label class="<%=label.getClassType()%>" for="RelSerieOffVen"><%label.write(out);%></label><%}%></td>
-													<td valign="top"><% 
+																<td valign="top"><% 
   WebMultiSearchForm YPsnDatiEcommerceRelSerieOffVen =  
      new com.thera.thermfw.web.WebMultiSearchForm("YPsnDatiEcommerce", "RelSerieOffVen", false, false, true, 2, null, null); 
   YPsnDatiEcommerceRelSerieOffVen.setParent(YPsnDatiEcommerceForm); 
   YPsnDatiEcommerceRelSerieOffVen.write(out); 
 %>
 <!--<span class="multisearchform" id="RelSerieOffVen"></span>--></td>
-												</tr>
-												<tr>
-													<td valign="top"><%{  WebLabelCompound label = new com.thera.thermfw.web.WebLabelCompound(null, null, "YPsnDatiEcommerce", "RValuta", null); 
+															</tr>
+															<tr>
+																<td valign="top"><%{  WebLabelCompound label = new com.thera.thermfw.web.WebLabelCompound(null, null, "YPsnDatiEcommerce", "RValuta", null); 
    label.setParent(YPsnDatiEcommerceForm); 
 %><label class="<%=label.getClassType()%>" for="RelValuta"><%label.write(out);%></label><%}%></td>
-													<td valign="top"><% 
+																<td valign="top"><% 
   WebMultiSearchForm YPsnDatiEcommerceRelValuta =  
      new com.thera.thermfw.web.WebMultiSearchForm("YPsnDatiEcommerce", "RelValuta", false, false, true, 1, null, null); 
   YPsnDatiEcommerceRelValuta.setParent(YPsnDatiEcommerceForm); 
   YPsnDatiEcommerceRelValuta.write(out); 
 %>
 <!--<span class="multisearchform" id="RelValuta"></span>--></td>
-												</tr>
-												<tr>
-													<td valign="top"><%{  WebLabelCompound label = new com.thera.thermfw.web.WebLabelCompound(null, null, "YPsnDatiEcommerce", "RAssogIva", null); 
+															</tr>
+															<tr>
+																<td valign="top"><%{  WebLabelCompound label = new com.thera.thermfw.web.WebLabelCompound(null, null, "YPsnDatiEcommerce", "RAssogIva", null); 
    label.setParent(YPsnDatiEcommerceForm); 
 %><label class="<%=label.getClassType()%>" for="RelAssogIva"><%label.write(out);%></label><%}%></td>
-													<td valign="top"><% 
+																<td valign="top"><% 
   WebMultiSearchForm YPsnDatiEcommerceRelAssogIva =  
      new com.thera.thermfw.web.WebMultiSearchForm("YPsnDatiEcommerce", "RelAssogIva", false, false, true, 1, null, null); 
   YPsnDatiEcommerceRelAssogIva.setParent(YPsnDatiEcommerceForm); 
   YPsnDatiEcommerceRelAssogIva.write(out); 
 %>
 <!--<span class="multisearchform" id="RelAssogIva"></span>--></td>
-												</tr>
-												<tr>
-													<td valign="top"><%{  WebLabelCompound label = new com.thera.thermfw.web.WebLabelCompound(null, null, "YPsnDatiEcommerce", "RCauOffTes", null); 
+															</tr>
+															<tr>
+																<td valign="top"><%{  WebLabelCompound label = new com.thera.thermfw.web.WebLabelCompound(null, null, "YPsnDatiEcommerce", "RCauOffTes", null); 
    label.setParent(YPsnDatiEcommerceForm); 
 %><label class="<%=label.getClassType()%>" for="RelCauOffTes"><%label.write(out);%></label><%}%></td>
-													<td valign="top"><% 
+																<td valign="top"><% 
   WebMultiSearchForm YPsnDatiEcommerceRelCauOffTes =  
      new com.thera.thermfw.web.WebMultiSearchForm("YPsnDatiEcommerce", "RelCauOffTes", false, false, true, 1, null, null); 
   YPsnDatiEcommerceRelCauOffTes.setParent(YPsnDatiEcommerceForm); 
   YPsnDatiEcommerceRelCauOffTes.write(out); 
 %>
 <!--<span class="multisearchform" id="RelCauOffTes"></span>--></td>
-												</tr>
-												<tr>
-													<td valign="top"><%{  WebLabelCompound label = new com.thera.thermfw.web.WebLabelCompound(null, null, "YPsnDatiEcommerce", "RCauOffRig", null); 
+															</tr>
+															<tr>
+																<td valign="top"><%{  WebLabelCompound label = new com.thera.thermfw.web.WebLabelCompound(null, null, "YPsnDatiEcommerce", "RCauOffRig", null); 
    label.setParent(YPsnDatiEcommerceForm); 
 %><label class="<%=label.getClassType()%>" for="RelCauOffRig"><%label.write(out);%></label><%}%></td>
-													<td valign="top"><% 
+																<td valign="top"><% 
   WebMultiSearchForm YPsnDatiEcommerceRelCauOffRig =  
      new com.thera.thermfw.web.WebMultiSearchForm("YPsnDatiEcommerce", "RelCauOffRig", false, false, true, 1, null, null); 
   YPsnDatiEcommerceRelCauOffRig.setParent(YPsnDatiEcommerceForm); 
   YPsnDatiEcommerceRelCauOffRig.write(out); 
 %>
 <!--<span class="multisearchform" id="RelCauOffRig"></span>--></td>
-												</tr>
-												<tr>
-													<td valign="top"><%{  WebLabelCompound label = new com.thera.thermfw.web.WebLabelCompound(null, null, "YPsnDatiEcommerce", "RCauRigOffScMerce", null); 
+															</tr>
+															<tr>
+																<td valign="top"><%{  WebLabelCompound label = new com.thera.thermfw.web.WebLabelCompound(null, null, "YPsnDatiEcommerce", "RCauRigOffScMerce", null); 
    label.setParent(YPsnDatiEcommerceForm); 
 %><label class="<%=label.getClassType()%>" for="RelCauOffRigScMerce"><%label.write(out);%></label><%}%>
-													</td>
-													<td valign="top"><% 
+																</td>
+																<td valign="top"><% 
   WebMultiSearchForm YPsnDatiEcommerceRelCauOffRigScMerce =  
      new com.thera.thermfw.web.WebMultiSearchForm("YPsnDatiEcommerce", "RelCauOffRigScMerce", false, false, true, 1, null, null); 
   YPsnDatiEcommerceRelCauOffRigScMerce.setParent(YPsnDatiEcommerceForm); 
   YPsnDatiEcommerceRelCauOffRigScMerce.write(out); 
 %>
 <!--<span class="multisearchform" id="RelCauOffRigScMerce"></span>--></td>
+															</tr>
+														</table>
+													</td>
 												</tr>
 												<tr>
-													<td colspan="2" valign="top"><!--<span class="editgrid" id="SerieNumeratori">--><% 
+													<td>
+														<table>
+															<tr>
+																<td valign="top"><%{  WebLabelCompound label = new com.thera.thermfw.web.WebLabelCompound(null, null, "YPsnDatiEcommerce", "OrizzonteDataConsegna", null); 
+   label.setParent(YPsnDatiEcommerceForm); 
+%><label class="<%=label.getClassType()%>" for="OrizzonteDataConsegna"><%label.write(out);%></label><%}%>
+																</td>
+																<td valign="top"><% 
+  WebTextInput YPsnDatiEcommerceOrizzonteDataConsegna =  
+     new com.thera.thermfw.web.WebTextInput("YPsnDatiEcommerce", "OrizzonteDataConsegna"); 
+  YPsnDatiEcommerceOrizzonteDataConsegna.setParent(YPsnDatiEcommerceForm); 
+%>
+<input class="<%=YPsnDatiEcommerceOrizzonteDataConsegna.getClassType()%>" id="<%=YPsnDatiEcommerceOrizzonteDataConsegna.getId()%>" maxlength="<%=YPsnDatiEcommerceOrizzonteDataConsegna.getMaxLength()%>" name="<%=YPsnDatiEcommerceOrizzonteDataConsegna.getName()%>" size="<%=YPsnDatiEcommerceOrizzonteDataConsegna.getSize()%>"><% 
+  YPsnDatiEcommerceOrizzonteDataConsegna.write(out); 
+%>
+</td>
+															</tr>
+															<tr>
+																<td valign="top"><%{  WebLabelCompound label = new com.thera.thermfw.web.WebLabelCompound(null, null, "YPsnDatiEcommerce", "GiorniValiditaOfferta", null); 
+   label.setParent(YPsnDatiEcommerceForm); 
+%><label class="<%=label.getClassType()%>" for="GiorniValiditaOfferta"><%label.write(out);%></label><%}%>
+																</td>
+																<td valign="top"><% 
+  WebTextInput YPsnDatiEcommerceGiorniValiditaOfferta =  
+     new com.thera.thermfw.web.WebTextInput("YPsnDatiEcommerce", "GiorniValiditaOfferta"); 
+  YPsnDatiEcommerceGiorniValiditaOfferta.setParent(YPsnDatiEcommerceForm); 
+%>
+<input class="<%=YPsnDatiEcommerceGiorniValiditaOfferta.getClassType()%>" id="<%=YPsnDatiEcommerceGiorniValiditaOfferta.getId()%>" maxlength="<%=YPsnDatiEcommerceGiorniValiditaOfferta.getMaxLength()%>" name="<%=YPsnDatiEcommerceGiorniValiditaOfferta.getName()%>" size="<%=YPsnDatiEcommerceGiorniValiditaOfferta.getSize()%>"><% 
+  YPsnDatiEcommerceGiorniValiditaOfferta.write(out); 
+%>
+</td>
+															</tr>
+														</table>
+													</td>
+												</tr>
+												<tr>
+													<td colspan="2">
+														<table style="width: 100%;">
+															<tr>
+																<td colspan="2" valign="top"><!--<span class="editgrid" id="SerieNumeratori">--><% 
   WebEditGrid YPsnDatiEcommerceSerieNumeratori =  
-     new com.thera.thermfw.web.WebEditGrid("YPsnDatiEcommerce", "SerieNumeratori", 8, new String[]{"RNazione", "RNumeratore", "RSerie"}, 1, null, "it.caleido.thip.base.connettori.utils.YPsnDatiEcommerceSerie.jsp",false,"com.thera.thermfw.web.servlet.GridActionAdapterForIndependentRow"); 
+     new com.thera.thermfw.web.WebEditGrid("YPsnDatiEcommerce", "SerieNumeratori", 3, new String[]{"RNazione", "RNumeratore", "RSerie"}, 1, null, "it.caleido.thip.base.connettori.utils.YPsnDatiEcommerceSerie.jsp",false,"com.thera.thermfw.web.servlet.GridActionAdapterForIndependentRow"); 
  YPsnDatiEcommerceSerieNumeratori.setParent(YPsnDatiEcommerceForm); 
  YPsnDatiEcommerceSerieNumeratori.setNoControlRowKeys(false); 
  YPsnDatiEcommerceSerieNumeratori.write(out); 
@@ -238,11 +283,11 @@
 <jsp:param name="Mode" value="NEW"/> 
 </jsp:include> 
 </span><!--</span>--></td>
-												</tr>
-												<tr>
-													<td colspan="2" valign="top"><!--<span class="editgrid" id="Causali">--><% 
+															</tr>
+															<tr>
+																<td colspan="2" valign="top"><!--<span class="editgrid" id="Causali">--><% 
   WebEditGrid YPsnDatiEcommerceCausali =  
-     new com.thera.thermfw.web.WebEditGrid("YPsnDatiEcommerce", "Causali", 8, new String[]{"RNazione", "Preventivo", "RCausale"}, 1, null, "it.caleido.thip.base.connettori.utils.YPsnDatiEcommerceCausale.jsp",false,"com.thera.thermfw.web.servlet.GridActionAdapterForIndependentRow"); 
+     new com.thera.thermfw.web.WebEditGrid("YPsnDatiEcommerce", "Causali", 3, new String[]{"RNazione", "Preventivo", "RCausale"}, 1, null, "it.caleido.thip.base.connettori.utils.YPsnDatiEcommerceCausale.jsp",false,"com.thera.thermfw.web.servlet.GridActionAdapterForIndependentRow"); 
  YPsnDatiEcommerceCausali.setParent(YPsnDatiEcommerceForm); 
  YPsnDatiEcommerceCausali.setNoControlRowKeys(false); 
  YPsnDatiEcommerceCausali.write(out); 
@@ -256,6 +301,9 @@
 <jsp:param name="Mode" value="NEW"/> 
 </jsp:include> 
 </span><!--</span>--></td>
+															</tr>
+														</table>
+													</td>
 												</tr>
 											</table>
 										</fieldset>

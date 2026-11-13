@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE TDDML SYSTEM "../../../TDDML.dtd">
+<TDDML>
+  <AlterTable schema="THIPPERS" name="YPSN_DATI_ECOMMERCE">
+    <AddColumn>
+      <Column name="ORIZZONTE_DATA_CONSEGNA" shortname="ORIZ_CONS" type="integer" nullable="yes"/>
+      <Column name="GIORNI_VALIDITA_OFFERTA" shortname="GG_VAL_OFF" type="integer" nullable="yes"/>
+    </AddColumn>
+  </AlterTable>
+  <Comment>
+    <CommentTable schema="THIPPERS" name="YPSN_DATI_ECOMMERCE" text="Pers connettore e-commerce">
+      <CommentColumn name="ORIZZONTE_DATA_CONSEGNA" text="Giorni da sommare a oggi per la data richiesta"/>
+      <CommentColumn name="GIORNI_VALIDITA_OFFERTA" text="Giorni da sommare a oggi per la validita offerta"/>
+    </CommentTable>
+  </Comment>
+  <Grant schema="THIPPERS" name="YPSN_DATI_ECOMMERCE"/>
+</TDDML>

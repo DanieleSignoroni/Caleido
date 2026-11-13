@@ -61,7 +61,7 @@ public class YPsnDatiEcommerceCausale extends YPsnDatiEcommerceCausalePO {
 			throw new IllegalArgumentException("Azienda obbligatoria");
 		try {
 			Vector rows = retrieveList(
-					YPsnDatiEcommerceCausaleTM.ID_AZIENDA + " = '" + idAzienda.replace("'", "''") + "'", null, true);
+					YPsnDatiEcommerceCausaleTM.ID_AZIENDA + " = '" + idAzienda + "'", null, true);
 			return selectForNazione(rows, nazione, preventivo);
 		} catch (ClassNotFoundException ex) {
 			throw new SQLException("Classe configurazione non disponibile", ex);

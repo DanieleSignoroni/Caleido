@@ -24,13 +24,16 @@
         <multisearchform name="RelCauOffRig" classRD="RelCauOffRig"/>
         <multisearchform name="RelCauOffRigScMerce" classRD="RelCauOffRigScMerce"/>
         
-        <editgrid name="SerieNumeratori" classCD="SerieNumeratori" type="include" visiblerows="8">
+        <textinput classAD="OrizzonteDataConsegna" name="OrizzonteDataConsegna"/>
+        <textinput classAD="GiorniValiditaOfferta" name="GiorniValiditaOfferta"/>
+        
+        <editgrid name="SerieNumeratori" classCD="SerieNumeratori" type="include" visiblerows="3">
           <column classAD="RNazione"/>
           <column classAD="RNumeratore"/>
           <column classAD="RSerie"/>
           <rowform name="SerieNumeratoriRowForm" rowJSP="it.caleido.thip.base.connettori.utils.YPsnDatiEcommerceSerie.jsp"/>
         </editgrid>
-        <editgrid name="Causali" classCD="Causali" type="include" visiblerows="8">
+        <editgrid name="Causali" classCD="Causali" type="include" visiblerows="3">
           <column classAD="RNazione"/>
           <column classAD="Preventivo"/>
           <column classAD="RCausale"/>
