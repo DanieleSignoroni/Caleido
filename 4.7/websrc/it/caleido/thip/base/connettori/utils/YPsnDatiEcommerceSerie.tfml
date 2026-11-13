@@ -1,0 +1,11 @@
+<tfml>
+  <generator type="internalRowForm"/>
+  <form classHdr="YPsnDatiEcommerceSerie" name="YPsnDatiEcommerceSerieForm"
+    errorList="no" menubar="no" toolbar="no" submitReset="none"
+    servlet="com.thera.thermfw.web.servlet.FormActionAdapter">
+    <textinput name="IdAzienda" classAD="IdAzienda"/>
+    <textinput name="IdRiga" classAD="IdRiga"/>
+    <multisearchform name="Nazione" classRD="Nazione"/>
+    <multisearchform name="Serie" classRD="Serie" additionalfields="1"/>
+  </form>
+</tfml>

@@ -1,0 +1,12 @@
+<tfml>
+  <generator type="internalRowForm"/>
+  <form classHdr="YPsnDatiEcommerceCausale" name="YPsnDatiEcommerceCausaleForm"
+    errorList="no" menubar="no" toolbar="no" submitReset="none"
+    servlet="com.thera.thermfw.web.servlet.FormActionAdapter">
+    <textinput name="IdAzienda" classAD="IdAzienda"/>
+    <textinput name="IdRiga" classAD="IdRiga"/>
+    <multisearchform name="Nazione" classRD="Nazione"/>
+    <multisearchform name="CausaleOffertaCliente" classRD="CausaleOffertaCliente"/>
+    <checkbox name="Preventivo" classAD="Preventivo"/>
+  </form>
+</tfml>

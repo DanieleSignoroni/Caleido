@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE TDDML SYSTEM "../../../TDDML.dtd">
+<TDDML>
+  <CreateTable schema="THIPPERS" name="YPSN_ECOM_CAUSALI" shortname="YEC_CAU">
+    <Column name="ID_AZIENDA" shortname="ID_AZIENDA" type="char" length="3" nullable="no"/>
+    <Column name="ID_RIGA" shortname="ID_RIGA" type="integer" nullable="no"/>
+    <Column name="R_NAZIONE" shortname="R_NAZIONE" type="char" length="3" nullable="yes"/>
+    <Column name="R_CAUSALE" shortname="R_CAUSALE" type="char" length="3" nullable="no"/>
+    <Column name="PREVENTIVO" shortname="PREVENTIVO" type="char" length="1" nullable="no" default="N"/>
+    <Column name="STATO" shortname="STATO" type="char" length="1" nullable="no"/>
+    <Column name="R_UTENTE_CRZ" shortname="R_UT_CRZ" type="char" length="20" nullable="yes"/>
+    <Column name="TIMESTAMP_CRZ" shortname="TS_CRZ" type="timestamp" nullable="no" default="CURRENT TIMESTAMP"/>
+    <Column name="R_UTENTE_AGG" shortname="R_UT_AGG" type="char" length="20" nullable="yes"/>
+    <Column name="TIMESTAMP_AGG" shortname="TS_AGG" type="timestamp" nullable="no" default="CURRENT TIMESTAMP"/>
+  </CreateTable>
+  <AlterTable schema="THIPPERS" name="YPSN_ECOM_CAUSALI">
+    <AddPrimaryKey>
+      <PrimaryKey>
+        <ColumnRef name="ID_AZIENDA"/>
+        <ColumnRef name="ID_RIGA"/>
+      </PrimaryKey>
+    </AddPrimaryKey>
+  </AlterTable>
+  <!-- SQLServer: indice univoco comprensivo del generico NULL. -->
+  <CreateIndex schema="THIPPERS" name="YEC_CAU_U01" tabschema="THIPPERS" tabname="YPSN_ECOM_CAUSALI" shortname="YEC_CAUU1" unique="yes">
+    <IndexCol name="ID_AZIENDA" order="Asc"/>
+    <IndexCol name="PREVENTIVO" order="Asc"/>
+    <IndexCol name="R_NAZIONE" order="Asc"/>
+  </CreateIndex>
+  <AlterTable schema="THIPPERS" name="YPSN_ECOM_CAUSALI">
+    <AddConstraint>
+      <Constraint name="YEC_CAU_NAZ" schema="THIPPERS" refschema="FINANCE" reftable="BBT34PT" ondelete="Restrict">
+        <ColumnRef name="R_NAZIONE"/>
+      </Constraint>
+      <Constraint name="YEC_CAU_CAU" schema="THIPPERS" refschema="THIP" reftable="CAU_OFFVEN" ondelete="Restrict">
+        <ColumnRef name="ID_AZIENDA"/>
+        <ColumnRef name="R_CAUSALE"/>
+      </Constraint>
+    </AddConstraint>
+  </AlterTable>
+  <Comment>
+    <CommentTable schema="THIPPERS" name="YPSN_ECOM_CAUSALI" text="Causali e-commerce">
+      <CommentColumn name="ID_AZIENDA" text="Azienda"/>
+      <CommentColumn name="ID_RIGA" text="Progressivo"/>
+      <CommentColumn name="R_NAZIONE" text="Nazione; NULL = generico"/>
+      <CommentColumn name="R_CAUSALE" text="Causale offerta"/>
+      <CommentColumn name="PREVENTIVO" text="Preventivo"/>
+      <CommentColumn name="STATO" text="Stato"/>
+      <CommentColumn name="R_UTENTE_CRZ" text="Utente creazione"/>
+      <CommentColumn name="TIMESTAMP_CRZ" text="Timestamp creazione"/>
+      <CommentColumn name="R_UTENTE_AGG" text="Utente modifica"/>
+      <CommentColumn name="TIMESTAMP_AGG" text="Timestamp modifica"/>
+    </CommentTable>
+    <CommentIndex schema="THIPPERS" name="YEC_CAU_U01" text="Univocita nazione e generico NULL"/>
+  </Comment>
+  <Grant schema="THIPPERS" name="YPSN_ECOM_CAUSALI"/>
+</TDDML>

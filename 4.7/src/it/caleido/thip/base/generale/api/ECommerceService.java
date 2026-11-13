@@ -927,7 +927,18 @@ public class ECommerceService {
 	public JSONObject toJSON(Indirizzo ind) {
 		JSONObject address = new JSONObject();
 		
-		
+		address.put("nrIndirizzo", ind.getIdSequenzaIndirizzo());
+		address.put("ragioneSociale", ind.getRagioneSociale());
+		address.put("ragioneSociale2", ind.getRagioneSociale2());
+		address.put("numeroTelefono", ind.getNumeroTelefono());
+		address.put("numeroFax", ind.getNumeroFax());
+		address.put("indirizzoEmail", ind.getIndirizzoEmail());
+		address.put("indirizzo", ind.getDatiIndirizzo().getIndirizzo());
+		address.put("indirizzo2", ind.getDatiIndirizzo().getIndirizzo2());
+		address.put("localita", ind.getDatiIndirizzo().getLocalita());
+		address.put("CAP", ind.getDatiIndirizzo().getCAP());
+		address.put("idProvincia", ind.getDatiIndirizzo().getIdProvincia());
+		address.put("idNazione", ind.getDatiIndirizzo().getIdNazione());
 		
 		return address;
 	}
