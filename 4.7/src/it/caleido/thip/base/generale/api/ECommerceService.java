@@ -1,0 +1,935 @@
+package it.caleido.thip.base.generale.api;
+
+import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Vector;
+
+import javax.ws.rs.core.Response.Status;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import com.thera.thermfw.ad.ClassADCollection;
+import com.thera.thermfw.ad.ClassADCollectionManager;
+import com.thera.thermfw.base.TimeUtils;
+import com.thera.thermfw.base.Trace;
+import com.thera.thermfw.collector.BODataCollector;
+import com.thera.thermfw.common.ErrorMessage;
+import com.thera.thermfw.gui.cnr.OpenType;
+import com.thera.thermfw.persist.CachedStatement;
+import com.thera.thermfw.persist.ConnectionManager;
+import com.thera.thermfw.persist.Factory;
+import com.thera.thermfw.persist.KeyHelper;
+import com.thera.thermfw.persist.PersistentObject;
+import com.thera.thermfw.rs.errors.ErrorUtils;
+import com.thera.thermfw.rs.errors.PantheraApiException;
+import com.thera.thermfw.type.DateType;
+import com.thera.thermfw.type.DecimalType;
+import com.thera.thermfw.type.EnumType;
+
+import it.caleido.thip.base.articolo.YArticolo;
+import it.caleido.thip.base.articolo.YArticoloDatiTecnici;
+import it.caleido.thip.base.connettori.utils.YPsnDatiEcommerce;
+import it.caleido.thip.datiTecnici.configuratore.YFasceColoriTM;
+import it.caleido.thip.datiTecnici.configuratore.YModelloTermostato;
+import it.caleido.thip.datiTecnici.configuratore.YModelloTermostatoTM;
+import it.caleido.thip.vendite.generaleVE.YModificaConfigurazioneRigaVendita;
+import it.thera.thip.base.articolo.Articolo;
+import it.thera.thip.base.azienda.Azienda;
+import it.thera.thip.base.cliente.Cliente;
+import it.thera.thip.base.cliente.ClienteVendita;
+import it.thera.thip.base.comuniVenAcq.CondizioniDiVenditaParams;
+import it.thera.thip.base.generale.NumeratoreHandler;
+import it.thera.thip.base.listini.ListinoVendita;
+import it.thera.thip.base.partner.AnagraficoDiBase;
+import it.thera.thip.base.partner.Indirizzo;
+import it.thera.thip.cs.DatiComuniEstesi;
+import it.thera.thip.datiTecnici.configuratore.Configurazione;
+import it.thera.thip.datiTecnici.configuratore.GestoreMacroConfigurazione;
+import it.thera.thip.datiTecnici.configuratore.MacroConfigurazione;
+import it.thera.thip.datiTecnici.configuratore.SchemaCfg;
+import it.thera.thip.datiTecnici.configuratore.SezioneConfigurazione;
+import it.thera.thip.datiTecnici.configuratore.ValoreVariabileCfg;
+import it.thera.thip.datiTecnici.configuratore.ValoreVariabileCfgTM;
+import it.thera.thip.datiTecnici.configuratore.VariabileSchemaCfg;
+import it.thera.thip.vendite.generaleVE.CondizioniDiVendita;
+import it.thera.thip.vendite.generaleVE.PersDatiVen;
+import it.thera.thip.vendite.generaleVE.RicercaCondizioniDiVendita;
+import it.thera.thip.vendite.offerteCliente.OffertaCliente;
+import it.thera.thip.vendite.offerteCliente.OffertaClienteRigaPrm;
+
+/**
+ * <p></p>
+ *
+ * <p>
+ * Company: Softre Solutions<br>
+ * Author: Daniele Signoroni<br>
+ * Date: 28/08/2026
+ * </p>
+ */
+
+/*
+ * Revisions:
+ * Number   Date        Owner    Description
+ * 72630    28/08/2026  DSSOF3   Prima stesura
+ * 72XXX	12/11/2026	DSSFO3	 Creazione offerta.
+ */
+
+public class ECommerceService {
+
+	static ECommerceService service;
+
+	public static ECommerceService getECommerceService() {
+		if(service == null)
+			service = new ECommerceService();
+		return service;
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public JSONObject riceviConfigurazione(String body) {
+		JSONObject response = new JSONObject();
+		Status status = Status.OK;
+		Collection<ErrorMessage> errors = new ArrayList<>();
+
+		boolean confCreated = false;
+		String keyConfCreated = null;
+		BigDecimal prezzo = null;
+
+		try {
+			JSONObject bodyAsJSON = new JSONObject(body);
+
+			errors = validaDatiRicezioneConfigurazione(bodyAsJSON);
+			if(!errors.isEmpty()) {
+				return buildResponse(Status.BAD_REQUEST, errors);
+			}
+
+			Articolo articolo = (Articolo) Articolo.elementWithKey(Articolo.class, KeyHelper.buildObjectKey(new String[] {
+					Azienda.getAziendaCorrente(),
+					bodyAsJSON.getString("IdArticolo")
+			}), PersistentObject.NO_LOCK);
+
+			String sintesiConfigGUI = costruisciSintesiConfigurazioneGUI(bodyAsJSON, articolo.getSchemaCfg(), articolo);
+			if(sintesiConfigGUI != null) {
+				BODataCollector boDCC = createDataCollector("Configurazione");
+
+				int rc = boDCC.initSecurityServices(OpenType.NEW, true, true, true);
+
+				if (rc != BODataCollector.OK) {
+					errors.addAll(boDCC.getErrorList().getErrors());
+					return buildResponse(Status.BAD_REQUEST, errors);
+				}
+
+				Configurazione conf = YModificaConfigurazioneRigaVendita.leggiConfigurazione(articolo.getIdAzienda(), articolo.getIdArticolo(), sintesiConfigGUI);
+				if(conf == null) {
+					conf = (Configurazione) boDCC.getBo();
+					conf.setIdAzienda(Azienda.getAziendaCorrente());
+					conf.setIdArticolo(articolo.getIdArticolo());
+					conf.setSchemaCfg(articolo.getSchemaCfg());
+
+					Hashtable newVvv = conf.getVariabiliValoriValue(sintesiConfigGUI);
+					conf.setSintesiConfig(conf.getFormattedSintesiConfigFinal(newVvv));
+					conf.setStatoSezioneCfg(DatiComuniEstesi.VALIDO);
+					conf.getDescrizione().setDescrizione(".");
+					conf.getDescrizione().setDescrizioneRidotta(".");
+					conf.setIdConfigurazione(new Integer(0));
+					conf.setOnDB(false);
+
+					SezioneConfigurazione sezConferma = conf.getSezioneCfg(Configurazione.ID_SEZ_CONFERMA);
+					if(sezConferma != null)
+						conf.setIdSezioneCfg(sezConferma.getIdSezioneCfg());
+
+					boDCC.setForceableErrorForced(true);
+					boDCC.setBo(conf);
+
+					rc = boDCC.save();
+
+					if(rc == BODataCollector.ERROR
+							&& boDCC.getErrorList().getErrors().size() == 1
+							&& ((ErrorMessage)boDCC.getErrorList().getErrors().get(0)).getId().equals("THIP_BS051")) { //..Esiste gia'
+						conf = conf.getConfigurazioneEquivalente();
+						rc = BODataCollector.OK;
+					}else {
+
+						if (rc == BODataCollector.ERROR) {
+							errors.addAll(boDCC.getErrorList().getErrors());
+							return buildResponse(Status.BAD_REQUEST, errors);
+						}else {
+							confCreated = true;
+							keyConfCreated = KeyHelper.formatKeyString(boDCC.getBo().getKey());
+						}
+					}
+				}
+
+				//Passo alla creazione della riga off per avere i prezzi
+				if(conf != null) {
+					ConnectionManager.pushConnection();
+					OffertaCliente off = null;
+					try {
+						off = creaOffertaCliente(bodyAsJSON.getString("IdCliente"));
+						if(off != null) {
+							rc = off.save();
+							if(rc > 0) {
+								OffertaClienteRigaPrm riga = creaOffertaClienteRigaPrm(off, articolo, conf);
+								if(riga != null) {
+									rc = riga.save();
+									if(rc > 0) {
+										prezzo = riga.getPrezzo();
+									}
+								}
+							}
+						}
+						off.retrieve();
+						rc = off.delete();
+						if(rc > 0) {
+							NumeratoreHandler numeratore = off.getNumeratoreHandler();
+							NumeratoreHandler.ripristinaProgressivo(numeratore.getIdAzienda(), numeratore.getIdNumeratore(),
+									numeratore.getIdSerie(), numeratore.getAnno(), numeratore.getNumero().intValue());
+							ConnectionManager.commit();
+						}
+					}catch (Exception e) {
+						if(off != null) {
+							NumeratoreHandler numeratore = off.getNumeratoreHandler();
+							NumeratoreHandler.ripristinaProgressivo(numeratore.getIdAzienda(), numeratore.getIdNumeratore(),
+									numeratore.getIdSerie(), numeratore.getAnno(), numeratore.getNumero().intValue());
+						}
+					}finally {
+						ConnectionManager.popConnection();
+					}
+				}
+			}else if(articolo.getIdSchemaCfg() == null) {
+				//Se non ho uno schema di configurazione allora e' un reperimento prezzi std da cdv
+				ClienteVendita cliente = (ClienteVendita) ClienteVendita.elementWithKey(ClienteVendita.class, KeyHelper.buildObjectKey(new String[] {
+						Azienda.getAziendaCorrente(), bodyAsJSON.getString("IdCliente")
+				}), PersistentObject.NO_LOCK);
+				CondizioniDiVendita cdv = recuperaCondizioniDiVendita(cliente, cliente.getListino(), articolo);
+				if (cdv != null) {
+					prezzo = cdv.getPrezzoAlNettoSconti();
+				}
+			}
+
+		}catch (Exception e) {
+			if(e instanceof PantheraApiException) {
+				PantheraApiException pae = (PantheraApiException) e;
+				return buildResponse((Status) pae.getHTTPStatus(), pae.getErrors());
+			}
+			errors.add(new ErrorMessage("BAS0000078","Eccezione non gestita: "+e.getMessage()));
+			e.printStackTrace(Trace.excStream);
+			status = Status.INTERNAL_SERVER_ERROR;
+		}
+
+		response = buildResponse(status, errors);
+		response.getJSONObject("response").put("confCreated", confCreated);
+		if(confCreated) {
+			response.getJSONObject("response").put("keyConfCreated", keyConfCreated);
+		}
+		response.getJSONObject("response").put("prezzo", prezzo != null ? prezzo : BigDecimal.ZERO);
+		return response;
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public Vector validaDatiRicezioneConfigurazione(JSONObject bodyAsJSON) throws NoSuchElementException, NoSuchFieldException {
+		Vector errors = new Vector();
+		BODataCollector boDCArt = createDataCollector("Articolo");
+		BODataCollector boDCCLI = createDataCollector("ClienteVendita");
+
+		if (!bodyAsJSON.has("IdArticolo")) {
+			ErrorMessage err = new ErrorMessage("BAS0000000");
+			aggiungiComponenteInErrore("IdArticolo", "Articolo", boDCArt, err);
+			errors.add(err);
+			return errors;
+		}
+
+		if (!bodyAsJSON.has("Variabili")) {
+			ErrorMessage err = new ErrorMessage("BAS0000078", "Indicare le variabili di configurazione");
+			errors.add(err);
+			return errors;
+		}
+
+		if (!bodyAsJSON.has("IdCliente")) {
+			ErrorMessage err = new ErrorMessage("BAS0000000");
+			aggiungiComponenteInErrore("IdCliente", "Cliente", boDCCLI, err);
+			errors.add(err);
+			return errors;
+		}
+
+		int rc = boDCArt.initSecurityServices(OpenType.UPDATE, true, true, true);
+
+		if (rc == BODataCollector.ERROR) {
+			errors.addAll(boDCArt.getErrorList().getErrors());
+			return errors;
+		}
+
+		rc = boDCArt.retrieve(
+				KeyHelper.buildObjectKey(new String[] {
+						Azienda.getAziendaCorrente(),
+						bodyAsJSON.getString("IdArticolo")
+				}));
+
+		if (rc == BODataCollector.ERROR) {
+			errors.addAll(boDCArt.getErrorList().getErrors());
+			for (Iterator iterator = errors.iterator(); iterator.hasNext();) {
+				ErrorMessage em = (ErrorMessage) iterator.next();
+				if(em.getId().equals("BAS0000004")) {
+					aggiungiComponenteInErrore("IdArticolo", "Articolo", boDCArt, em);
+				}
+			}
+			return errors;
+		}
+		rc = boDCCLI.retrieve(
+				KeyHelper.buildObjectKey(new String[] {
+						Azienda.getAziendaCorrente(),
+						bodyAsJSON.getString("IdCliente")
+				}));
+
+		if (rc == BODataCollector.ERROR) {
+			errors.addAll(boDCCLI.getErrorList().getErrors());
+			for (Iterator iterator = errors.iterator(); iterator.hasNext();) {
+				ErrorMessage em = (ErrorMessage) iterator.next();
+				if(em.getId().equals("BAS0000004")) {
+					aggiungiComponenteInErrore("IdCliente", "Cliente", boDCCLI, em);
+				}
+			}
+			return errors;
+		}
+
+		/*Articolo articolo = (Articolo) boDCArt.getBo();
+
+		if (articolo.getSchemaCfg() == null) {
+			ErrorMessage err = new ErrorMessage("BAS0000000");
+			aggiungiComponenteInErrore("IdSchemaCfg", "Articolo", boDCArt, err);
+			errors.add(err);
+		}*/
+		return errors;
+	}
+
+	//72XXX <
+	public JSONObject creaOffertaClienteFromJSON(String body) {
+		JSONObject response = new JSONObject();
+		Status status = Status.OK;
+		Collection<ErrorMessage> errors = new ArrayList<>();
+
+		response = buildResponse(status, errors);
+		return response;
+	}
+	//72XXX >
+
+	public OffertaCliente creaOffertaCliente(String idCliente) {
+		OffertaCliente offerta = (OffertaCliente) Factory.createObject(OffertaCliente.class);
+		offerta.setIdAzienda(Azienda.getAziendaCorrente());
+		offerta.getNumeratoreHandler().setDataDocumento(TimeUtils.getCurrentDate());
+		offerta.getNumeratoreHandler().setIdNumeratore(YPsnDatiEcommerce.getCurrentYPsnDatiEcommerce().getRNumeratoreOffVen());
+		offerta.getNumeratoreHandler().setIdSerie(YPsnDatiEcommerce.getCurrentYPsnDatiEcommerce().getRSerieOffVen());
+		offerta.setIdCau(YPsnDatiEcommerce.getCurrentYPsnDatiEcommerce().getRCauOffTes());
+		offerta.setIdCliente(idCliente);
+		offerta.setTipoIntestatarioOfferta(OffertaCliente.TIPO_INTESTATARIO_CLIENTE);
+		offerta.completaBO();
+		return offerta;
+	}
+
+	public OffertaClienteRigaPrm creaOffertaClienteRigaPrm(OffertaCliente offerta, Articolo articolo, Configurazione conf) {
+		OffertaClienteRigaPrm riga = (OffertaClienteRigaPrm) Factory.createObject(OffertaClienteRigaPrm.class);
+		riga.setTestata(offerta);
+		riga.setIdAzienda(Azienda.getAziendaCorrente());
+		riga.completaBO();
+		riga.setIdCauRig(YPsnDatiEcommerce.getCurrentYPsnDatiEcommerce().getRCauOffRig());
+		riga.setArticolo(articolo);
+		riga.setConfigurazione(conf);
+		riga.setIdUMRif(articolo.getIdUMRiferimento());
+		riga.cambiaArticolo(articolo, conf, true);
+		riga.getQuantitaOffertaVen().setQuantitaInUMPrm(BigDecimal.ONE);
+		riga.getQuantitaOffertaVen().setQuantitaInUMRif(BigDecimal.ONE);
+		return riga;
+	}
+
+	public String costruisciSintesiConfigurazioneGUI(JSONObject bodyAsJSON, SchemaCfg schemaCfg, Articolo articolo) throws PantheraApiException {
+		if(schemaCfg == null)
+			return null;
+		StringBuilder sintesi = new StringBuilder();
+		JSONArray variables = bodyAsJSON.getJSONArray("Variabili");
+		for (int i = 0; i < variables.length(); i++) {
+			JSONObject variabile = variables.getJSONObject(i);
+
+			if (variabile.length() != 1) {
+				throw new IllegalArgumentException(
+						"La variabile di configurazione deve contenere una sola coppia chiave-valore"
+						);
+			}
+
+			String idVariabile = variabile.keys().next();
+			String valore = variabile.getString(idVariabile);
+
+			VariabileSchemaCfg variabileCfg = variabileSchemaConfigurazione(schemaCfg, idVariabile);
+			if(variabileCfg == null) {
+				String c = KeyHelper.buildObjectKey(new String[] {schemaCfg.getKey(), idVariabile});
+				throw new PantheraApiException(Status.BAD_REQUEST, new ErrorMessage("BAS0000004", new String[] {c}));
+			}
+			ValoreVariabileCfg valoreVarCfg = null;
+			/*if(idVariabile.equals("TERMOSTATO")) {
+				//..Ricerca su tabella THIPPERS.YMODELLO_TERMOSTATO con valore passato dall'e-commerce
+				valoreVarCfg = ricercaModelloTermostato(bodyAsJSON, schemaCfg, valore);
+			}else {*/
+			int dimcarcodcfg = variabileCfg.getDimCarCodCfg();
+			if (dimcarcodcfg >= 0 & dimcarcodcfg > VariabileSchemaCfg.MIN_DIMCARCODCFG) {
+				valoreVarCfg = valoreVariabileSchemaConfigurazione(variabileCfg, idVariabile, valore);
+			}else {
+				valoreVarCfg = valoreVariabileSchemaConfigurazionePVAL(variabileCfg, idVariabile, valore);
+			}
+			//}
+			if(valoreVarCfg == null) {
+				String c = KeyHelper.buildObjectKey(new String[] {variabileCfg.getKey(), valore});
+				throw new PantheraApiException(Status.BAD_REQUEST, new ErrorMessage("BAS0000004", new String[] {c}));
+			}
+
+			sintesi.append(idVariabile).append(PersistentObject.KEY_SEPARATOR).append(valoreVarCfg.getPrimoValore()).append(PersistentObject.KEY_SEPARATOR).append(valoreVarCfg.getSequenzaValore());
+
+			// Aggiungo il separatore solo se non sono sull'ultimo elemento
+			if (i < variables.length() - 1) {
+				sintesi.append(PersistentObject.KEY_SEPARATOR);
+			}
+		}
+
+		boolean sepAdded = false;
+
+		//..Ora le parti parametrizzate (fisse)
+
+		VariabileSchemaCfg OPERAZ_ELETTRIF = variabileSchemaConfigurazione(schemaCfg, "OPERAZ.ELETTRIF");
+		if(OPERAZ_ELETTRIF != null) {
+			if(!sepAdded) {
+				sintesi.append(PersistentObject.KEY_SEPARATOR);
+				sepAdded = true;
+			}
+			ValoreVariabileCfg valoreVarCfg = valoreVariabileSchemaConfigurazione(OPERAZ_ELETTRIF, OPERAZ_ELETTRIF.getIdVariabileConfig(), "S");
+			if(valoreVarCfg != null) {
+				if(!sintesi.toString().contains(OPERAZ_ELETTRIF.getIdVariabileConfig())) {
+					sepAdded = false;
+				}
+				aggiungiOSostituisciVariabile(sintesi, OPERAZ_ELETTRIF.getIdVariabileConfig(), valoreVarCfg.getPrimoValore(), String.valueOf(valoreVarCfg.getSequenzaValore()));
+				if(!sepAdded) {
+					sintesi.append(PersistentObject.KEY_SEPARATOR);
+					sepAdded = true;
+				}
+			}
+		}
+
+		//Per calcolare la FASCIA ho bisogno del colore
+		VariabileSchemaCfg FASCIA = variabileSchemaConfigurazione(schemaCfg, "FASCIA");
+		if(FASCIA != null && sintesi.toString().contains("COLORE")) {
+			if(!sepAdded) {
+				sintesi.append(PersistentObject.KEY_SEPARATOR);
+				sepAdded = true;
+			}
+			ValoreVariabileCfg valoreVarCfg = ricercaFasciaColore(schemaCfg, FASCIA, getValoreVariabile(bodyAsJSON, "COLORE"));
+			if(valoreVarCfg != null) {
+				if(!sintesi.toString().contains(FASCIA.getIdVariabileConfig())) {
+					sepAdded = false;
+				}
+				aggiungiOSostituisciVariabile(sintesi, FASCIA.getIdVariabileConfig(), valoreVarCfg.getPrimoValore(), String.valueOf(valoreVarCfg.getSequenzaValore()));
+				if(!sepAdded) {
+					sintesi.append(PersistentObject.KEY_SEPARATOR);
+					sepAdded = true;
+				}
+			}
+		}
+
+		VariabileSchemaCfg FISSAGGI = variabileSchemaConfigurazione(schemaCfg, "FISSAGGI");
+		if(FISSAGGI != null) {
+			if(!sepAdded) {
+				sintesi.append(PersistentObject.KEY_SEPARATOR);
+				sepAdded = true;
+			}
+			ValoreVariabileCfg valoreVarCfg = valoreVariabileSchemaConfigurazione(FISSAGGI, FISSAGGI.getIdVariabileConfig(), "00");
+			if(valoreVarCfg == null)
+				valoreVarCfg = valoreVariabileSchemaConfigurazione(FISSAGGI, FISSAGGI.getIdVariabileConfig(), "000");
+			if(valoreVarCfg != null) {
+				if(!sintesi.toString().contains(FISSAGGI.getIdVariabileConfig())) {
+					sepAdded = false;
+				}
+				aggiungiOSostituisciVariabile(sintesi, FISSAGGI.getIdVariabileConfig(), valoreVarCfg.getPrimoValore(), String.valueOf(valoreVarCfg.getSequenzaValore()));
+				if(!sepAdded) {
+					sintesi.append(PersistentObject.KEY_SEPARATOR);
+					sepAdded = true;
+				}
+			}
+		}
+
+		VariabileSchemaCfg POSIZ_TERMOST = variabileSchemaConfigurazione(schemaCfg, "POSIZ_TERMOST");
+		if(POSIZ_TERMOST != null) {
+			if(articolo instanceof YArticolo
+					&& articolo.getArticoloDatiTecnici() instanceof YArticoloDatiTecnici
+					&& ((YArticoloDatiTecnici)articolo.getArticoloDatiTecnici()).getDestroOSinistro() != '-') {
+				char destroOSinistro =((YArticoloDatiTecnici) articolo.getArticoloDatiTecnici()).getDestroOSinistro();
+
+				EnumType etDxOrSx = EnumType.getEnumTypeInstance("PosizTermostato", EnumType.class);
+
+				if (destroOSinistro != '-') {
+					if(!sepAdded) {
+						sintesi.append(PersistentObject.KEY_SEPARATOR);
+						sepAdded = true;
+					}
+					//Così e non (etDxOrSx.descriptionFromValue) perche' l'enumerato e' stato codificato male
+					String posizione = (String) etDxOrSx.getAttValueDescriptions().get(Integer.valueOf(String.valueOf(destroOSinistro)));
+					ValoreVariabileCfg valoreVarCfg = valoreVariabileSchemaConfigurazionePVAL(POSIZ_TERMOST, POSIZ_TERMOST.getIdVariabileConfig(), posizione);
+					if(valoreVarCfg != null) {
+						if(!sintesi.toString().contains(POSIZ_TERMOST.getIdVariabileConfig())) {
+							sepAdded = false;
+						}
+						aggiungiOSostituisciVariabile(sintesi, POSIZ_TERMOST.getIdVariabileConfig(), valoreVarCfg.getPrimoValore(), String.valueOf(valoreVarCfg.getSequenzaValore()));
+						if(!sepAdded) {
+							sintesi.append(PersistentObject.KEY_SEPARATOR);
+							sepAdded = true;
+						}
+					}
+				}
+			}
+		}
+
+		//Potenza Watt <
+		if(articolo instanceof YArticolo
+				&& articolo.getArticoloDatiTecnici() instanceof YArticoloDatiTecnici
+				&& ((YArticoloDatiTecnici)articolo.getArticoloDatiTecnici()).getVariabilePotenza() != null) {
+			ValoreVariabileCfg POTENZA_WATT = ((YArticoloDatiTecnici)articolo.getArticoloDatiTecnici()).getPotenzaWatt();
+			if(POTENZA_WATT != null) {
+				if(!sepAdded) {
+					sintesi.append(PersistentObject.KEY_SEPARATOR);
+					sepAdded = true;
+				}
+				sintesi.append(POTENZA_WATT.getIdVariabileConfig()).append(PersistentObject.KEY_SEPARATOR).append(POTENZA_WATT.getPrimoValore()).append(PersistentObject.KEY_SEPARATOR).append(POTENZA_WATT.getSequenzaValore());
+			}
+		}
+		//Potenza Watt >
+
+		//Macro <
+		Configurazione confTempo = (Configurazione) Factory.createObject(Configurazione.class);
+		confTempo.setSchemaCfg(schemaCfg);
+		confTempo.setArticolo(articolo);
+		confTempo.setSintesiConfig(sintesi.toString());
+
+		MacroConfigurazione ABILITAZ_COLORE = macroSchemaConfigurazione(schemaCfg, "ACCESSORIO");
+		if(ABILITAZ_COLORE != null) {
+			GestoreMacroConfigurazione gestore = (GestoreMacroConfigurazione) Factory.createObject(GestoreMacroConfigurazione.class);
+			gestore.esegue(ABILITAZ_COLORE, confTempo);
+
+			sintesi.setLength(0);
+			sintesi.append(confTempo.getSintesiConfig());
+		}
+
+		MacroConfigurazione TIPO_ESTRUSO = macroSchemaConfigurazione(schemaCfg, "TIPO ESTRUSO");
+		if(TIPO_ESTRUSO != null) {
+			GestoreMacroConfigurazione gestore = (GestoreMacroConfigurazione) Factory.createObject(GestoreMacroConfigurazione.class);
+			gestore.esegue(TIPO_ESTRUSO, confTempo);
+
+			sintesi.setLength(0);
+			sintesi.append(confTempo.getSintesiConfig());
+		}
+
+		MacroConfigurazione TIPO_FINEDESIGN = macroSchemaConfigurazione(schemaCfg, "TIPO FINEDESIGN");
+		if(TIPO_FINEDESIGN != null) {
+			GestoreMacroConfigurazione gestore = (GestoreMacroConfigurazione) Factory.createObject(GestoreMacroConfigurazione.class);
+			gestore.esegue(TIPO_FINEDESIGN, confTempo);
+
+			sintesi.setLength(0);
+			sintesi.append(confTempo.getSintesiConfig());
+		}
+
+		MacroConfigurazione TIPO_SCALD = macroSchemaConfigurazione(schemaCfg, "TIPO SCALDASALV");
+		if(TIPO_SCALD != null) {
+			GestoreMacroConfigurazione gestore = (GestoreMacroConfigurazione) Factory.createObject(GestoreMacroConfigurazione.class);
+			gestore.esegue(TIPO_SCALD, confTempo);
+
+			sintesi.setLength(0);
+			sintesi.append(confTempo.getSintesiConfig());
+		}
+		//Macro >
+
+
+		return sintesi.toString();
+	}
+
+	public ValoreVariabileCfg ricercaFasciaColore(SchemaCfg schemaCfg, VariabileSchemaCfg fASCIA, String carCodCfgColore) {
+		ValoreVariabileCfg varCfg = null;
+		ResultSet rs = null;
+		CachedStatement cs = null;
+		try {
+
+			String select = "SELECT\r\n"
+					+ "	*\r\n"
+					+ "FROM\r\n"
+					+ "	THIPPERS.YFASCE_COLORI FC\r\n"
+					+ "INNER JOIN THIP.VALORI_VAR_CFG VC\r\n"
+					+ "ON\r\n"
+					+ "	FC.ID_AZIENDA = VC.ID_AZIENDA\r\n"
+					+ "	AND FC.ID_SCHEMA_CFG_COLORE = VC.ID_SCHEMA_CFG\r\n"
+					+ "	AND FC.ID_VARIABILE_CONFIG_COLORE = VC.ID_VARIABILE_CFG\r\n"
+					+ "	AND FC.SEQUENZA_VALORE_COLORE = VC.SEQ_VALORE";
+
+			String where = " FC."+YFasceColoriTM.ID_AZIENDA+" = '"+Azienda.getAziendaCorrente()+"' ";
+			where += " AND "+YFasceColoriTM.ID_VARIABILE_CONFIG_FASCIA+" = '"+fASCIA.getIdVariabileConfig()+"' ";
+			where += " AND "+YFasceColoriTM.ID_SCHEMA_CFG_FASCIA+" = '"+schemaCfg.getIdSchemaCfg()+"' ";
+
+			where += " AND "+YFasceColoriTM.ID_VARIABILE_CONFIG_COLORE+" = 'COLORE' ";
+			where += " AND "+YFasceColoriTM.ID_SCHEMA_CFG_FASCIA+" = '"+schemaCfg.getIdSchemaCfg()+"' ";
+
+			where += " AND "+YFasceColoriTM.ID_SCHEMA_CFG_FASCIA+" = '"+schemaCfg.getIdSchemaCfg()+"' ";
+
+			where += " AND VC.CAR_COD_CFG = '"+carCodCfgColore+"' ";
+
+			cs = new CachedStatement(select + " WHERE " + where); 
+			rs = cs.executeQuery();
+			if(rs.next()) {
+				varCfg = (ValoreVariabileCfg) ValoreVariabileCfg.elementWithKey(ValoreVariabileCfg.class, KeyHelper.buildObjectKey(new String[] {
+						rs.getString(YFasceColoriTM.ID_AZIENDA),
+						rs.getString(YFasceColoriTM.ID_SCHEMA_CFG_FASCIA),
+						rs.getString(YFasceColoriTM.ID_VARIABILE_CONFIG_FASCIA),
+						rs.getString(YFasceColoriTM.SEQUENZA_VALORE_FASCIA)
+				}), PersistentObject.NO_LOCK);	
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace(Trace.excStream);
+		}finally {
+			try {
+				if(rs != null)
+					rs.close();
+				if(cs != null)
+					cs.free();
+			}catch (SQLException e) {
+				e.printStackTrace(Trace.excStream);
+			}
+		}
+		return varCfg;
+	}
+
+	@SuppressWarnings("rawtypes")
+	public ValoreVariabileCfg ricercaModelloTermostato(JSONObject bodyAsJSON, SchemaCfg schemaCfg, String valore) {
+		try {
+			Cliente cliente = (Cliente) Cliente.elementWithKey(Cliente.class, KeyHelper.buildObjectKey(new String[] {
+					Azienda.getAziendaCorrente(), (String) bodyAsJSON.get("IdCliente")
+			}), PersistentObject.NO_LOCK);
+			if(cliente != null) {
+				String idNazione = cliente.getIdNazione();
+
+				String where = " "+YModelloTermostatoTM.ID_AZIENDA+" = '"+Azienda.getAziendaCorrente()+"' ";
+				where += " AND "+YModelloTermostatoTM.CODICE+" = '"+valore+"' ";
+				where += " AND "+YModelloTermostatoTM.ID_SCHEMA_CFG+" = '"+schemaCfg.getIdSchemaCfg()+"' ";
+
+				String whereNazi = " AND "+YModelloTermostatoTM.IDNAZIONE+" = '"+idNazione+"' ";
+
+				Vector v = YModelloTermostato.retrieveList(YModelloTermostato.class, where + whereNazi, "", false);
+				if(v.isEmpty()) {
+					v = YModelloTermostato.retrieveList(YModelloTermostato.class, where, "", false);
+				}
+				if(!v.isEmpty()) {
+					YModelloTermostato modello = (YModelloTermostato) v.get(0);
+					return (ValoreVariabileCfg) ValoreVariabileCfg.elementWithKey(ValoreVariabileCfg.class, KeyHelper.buildObjectKey(new String[] {
+							modello.getSchemaconfigurazioneKey(), modello.getIdVariabileConfig(), String.valueOf(modello.getSequenzaValore())
+					}),PersistentObject.NO_LOCK);
+				}
+
+			}
+		} catch (Exception e) {
+			e.printStackTrace(Trace.excStream);
+		}
+		return null;
+	}
+
+	public void aggiungiOSostituisciVariabile(
+			StringBuilder sintesi,
+			String idVariabile,
+			String valore,
+			String sequenza) {
+
+		String separator = PersistentObject.KEY_SEPARATOR;
+
+		String[] elementi = sintesi.toString().split(
+				java.util.regex.Pattern.quote(separator),
+				-1
+				);
+
+		StringBuilder nuovaSintesi = new StringBuilder();
+		boolean sostituita = false;
+
+		/*
+		 * La sintesi è composta da terne:
+		 *
+		 * VARIABILE + sep + VALORE + sep + SEQUENZA
+		 *
+		 * Esempio:
+		 * FASCIA + sep + Fascia C + sep + 4 +
+		 * sep +
+		 * COLORE + sep + Grigio 9022 Pearl Gr + sep + 32
+		 */
+		for (int i = 0; i + 2 < elementi.length; i += 3) {
+
+			String variabileCorrente = elementi[i];
+			String valoreCorrente = elementi[i + 1];
+			String sequenzaCorrente = elementi[i + 2];
+
+			if (variabileCorrente.equals(idVariabile)) {
+				valoreCorrente = valore;
+				sequenzaCorrente = sequenza;
+				sostituita = true;
+			}
+
+			if (nuovaSintesi.length() > 0) {
+				nuovaSintesi.append(separator);
+			}
+
+			nuovaSintesi
+			.append(variabileCorrente)
+			.append(separator)
+			.append(valoreCorrente)
+			.append(separator)
+			.append(sequenzaCorrente);
+		}
+
+		// Se la variabile non era presente, aggiungo l'intera terna
+		if (!sostituita) {
+
+			if (nuovaSintesi.length() > 0) {
+				nuovaSintesi.append(separator);
+			}
+
+			nuovaSintesi
+			.append(idVariabile)
+			.append(separator)
+			.append(valore)
+			.append(separator)
+			.append(sequenza);
+		}
+
+		sintesi.setLength(0);
+		sintesi.append(nuovaSintesi);
+	}
+
+	public String getValoreVariabile(JSONObject bodyAsJSON, String idVariabile) {
+		JSONArray variabili = bodyAsJSON.getJSONArray("Variabili");
+
+		for (int i = 0; i < variabili.length(); i++) {
+			JSONObject variabile = variabili.getJSONObject(i);
+
+			if (variabile.has(idVariabile)) {
+				return variabile.getString(idVariabile);
+			}
+		}
+
+		return null;
+	}
+
+	public MacroConfigurazione macroSchemaConfigurazione(SchemaCfg schemaCfg, String idMacro) {
+		try {
+			return (MacroConfigurazione) MacroConfigurazione.elementWithKey(MacroConfigurazione.class, KeyHelper.buildObjectKey(new String[] {
+					schemaCfg.getKey(), idMacro
+			}), PersistentObject.NO_LOCK);
+		} catch (SQLException e) {
+			e.printStackTrace(Trace.excStream);
+		}
+		return null;
+	}
+
+	public VariabileSchemaCfg variabileSchemaConfigurazione(SchemaCfg schemaCfg, String idVariabile) {
+		try {
+			return (VariabileSchemaCfg) VariabileSchemaCfg.elementWithKey(VariabileSchemaCfg.class, KeyHelper.buildObjectKey(new String[] {
+					schemaCfg.getKey(), idVariabile
+			}), PersistentObject.NO_LOCK);
+		} catch (SQLException e) {
+			e.printStackTrace(Trace.excStream);
+		}
+		return null;
+	}
+
+	public ValoreVariabileCfg valoreVariabileSchemaConfigurazione(VariabileSchemaCfg variabileCfg, String idValore) {
+		try {
+			return (ValoreVariabileCfg) ValoreVariabileCfg.elementWithKey(ValoreVariabileCfg.class, KeyHelper.buildObjectKey(new String[] {
+					variabileCfg.getKey(), idValore
+			}), PersistentObject.NO_LOCK);
+		} catch (SQLException e) {
+			e.printStackTrace(Trace.excStream);
+		}
+		return null;
+	}
+
+	@SuppressWarnings("rawtypes")
+	public ValoreVariabileCfg valoreVariabileSchemaConfigurazione(VariabileSchemaCfg variabileCfg, String idVariabile, String carCodCfg) {
+		try {
+			String where = ValoreVariabileCfgTM.ID_AZIENDA+"='"+variabileCfg.getIdAzienda()+"'";
+			where += "AND " + ValoreVariabileCfgTM.ID_SCHEMA_CFG+"='"+variabileCfg.getIdSchemaCfg()+"'";
+			where += "AND " + ValoreVariabileCfgTM.ID_VARIABILE_CFG+"='"+idVariabile+"'";
+			where += "AND " + ValoreVariabileCfgTM.CAR_COD_CFG+"='"+carCodCfg+"'";
+			Vector v = ValoreVariabileCfg.retrieveList(ValoreVariabileCfg.class, where, "", false);
+			if(!v.isEmpty()) {
+				return (ValoreVariabileCfg) v.get(0);
+			}
+		} catch (Exception e) {
+			e.printStackTrace(Trace.excStream);
+		}
+		return null;
+	}
+
+	@SuppressWarnings("rawtypes")
+	public ValoreVariabileCfg valoreVariabileSchemaConfigurazionePVAL(VariabileSchemaCfg variabileCfg, String idVariabile, String primoValore) {
+		try {
+			String where = ValoreVariabileCfgTM.ID_AZIENDA+"='"+variabileCfg.getIdAzienda()+"'";
+			where += "AND " + ValoreVariabileCfgTM.ID_SCHEMA_CFG+"='"+variabileCfg.getIdSchemaCfg()+"'";
+			where += "AND " + ValoreVariabileCfgTM.ID_VARIABILE_CFG+"='"+idVariabile+"'";
+			where += "AND " + ValoreVariabileCfgTM.PRIMO_VALORE+"='"+primoValore+"'";
+			Vector v = ValoreVariabileCfg.retrieveList(ValoreVariabileCfg.class, where, "", false);
+			if(!v.isEmpty()) {
+				return (ValoreVariabileCfg) v.get(0);
+			}
+		} catch (Exception e) {
+			e.printStackTrace(Trace.excStream);
+		}
+		return null;
+	}
+
+	public static CondizioniDiVendita recuperaCondizioniDiVendita(ClienteVendita cliente, ListinoVendita listino, Articolo articolo) {
+		DateType dateType = new DateType();
+		DecimalType decType = new DecimalType();
+		CondizioniDiVenditaParams condVenParams = (CondizioniDiVenditaParams)Factory.createObject(CondizioniDiVenditaParams.class); 
+		condVenParams = condVenParams.impostaParamsCondizioniDiVendita(null,
+				cliente.getIdAzienda(),
+				listino.getIdListino(),
+				cliente.getIdCliente(),
+				articolo.getIdArticolo(),
+				null,
+				articolo.getUMDefaultVendita().getIdUnitaMisura(),
+				decType.objectToString(BigDecimal.ONE),
+				decType.objectToString(BigDecimal.ONE),
+				null,
+				dateType.objectToString(TimeUtils.getCurrentDate()),
+				null,
+				cliente.getIdAgente(),
+				cliente.getIdSubAgente(),
+				null,
+				listino.getIdValuta(),
+				String.valueOf(PersDatiVen.getCurrentPersDatiVen().getTipoDataPrezziSconti()),
+				false,
+				null, 
+				null, 
+				null,
+				"1", 
+				null,
+				null,
+				null,
+				null,
+				null,
+				null
+				); 
+		CondizioniDiVendita condVen = RicercaCondizioniDiVendita.getCondizioniVendita(condVenParams);
+		return condVen;
+	}
+
+	public JSONObject buildResponse(
+			Status status,
+			Collection<ErrorMessage> errors) {
+
+		JSONObject result = new JSONObject();
+		result.put("errors", ErrorUtils.getInstance().toJSON(errors));
+
+		JSONObject response = new JSONObject();
+		response.put("response", result);
+		response.put("status", status);
+
+		return response;
+	}
+
+	/**
+	 * Si occupa di aggiungere il BaseComponent all'errore così da costruire il testo in maniera completa.
+	 * @param attributeName
+	 * @param className
+	 * @param bodc
+	 * @param errorMessage
+	 * @throws NoSuchElementException
+	 * @throws NoSuchFieldException
+	 */
+	public void aggiungiComponenteInErrore(String attributeName, String className, BODataCollector bodc, ErrorMessage errorMessage) throws NoSuchElementException, NoSuchFieldException {
+		ClassADCollection cad = ClassADCollectionManager.collectionWithName(className);
+		String label = cad.getClassNameNLS() + " - " + cad.getAttribute(attributeName).getAttributeNameNLS();
+		if(errorMessage.getId().equals("BAS0000004")) {
+			label = cad.getClassNameNLS();
+		}
+		errorMessage.addComponent(attributeName, label, bodc.getComponent(attributeName));
+	}
+
+	protected BODataCollector createDataCollector(String classname) {
+		try {
+			ClassADCollection hdr = ClassADCollectionManager.collectionWithName(classname);
+			return createDataCollector(hdr);
+		} catch (NoSuchFieldException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	protected BODataCollector createDataCollector(ClassADCollection classDescriptor) {
+		BODataCollector dataCollector = null;
+		String collectorName = classDescriptor.getBODataCollector();
+		if (collectorName != null) {
+			dataCollector = (BODataCollector) Factory.createObject(collectorName);
+		} else {
+			dataCollector = new BODataCollector();
+		}
+		dataCollector.initialize(classDescriptor.getClassName(), true);
+		return dataCollector;
+	}
+
+	//72XXX <
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public JSONObject customerAdresses(String idCliente) {
+		JSONObject response = new JSONObject();
+		Status status = Status.OK;
+		Collection<ErrorMessage> errors = new ArrayList<>();
+		
+		JSONArray adresses = new JSONArray();
+
+		BODataCollector boDCCLI = createDataCollector("Cliente");
+		try {
+			int rc = boDCCLI.retrieve(
+					KeyHelper.buildObjectKey(new String[] {
+							Azienda.getAziendaCorrente(),
+							idCliente
+					}));
+			if (rc == BODataCollector.ERROR) {
+				errors.addAll(boDCCLI.getErrorList().getErrors());
+				for (Iterator iterator = errors.iterator(); iterator.hasNext();) {
+					ErrorMessage em = (ErrorMessage) iterator.next();
+					if(em.getId().equals("BAS0000004")) {
+						aggiungiComponenteInErrore("IdCliente", "Cliente", boDCCLI, em);
+					}
+				}
+			}else {
+				AnagraficoDiBase anagrafico = ((Cliente)boDCCLI.getBo()).getAnagrafico();
+				if(anagrafico != null) {
+					Iterator iterIndirizzi = anagrafico.getIndirizzi().iterator();
+					while(iterIndirizzi.hasNext()) {
+						Indirizzo ind = (Indirizzo) iterIndirizzi.next();
+						
+						adresses.put(toJSON(ind));
+					}
+				}
+			}
+		}catch (NoSuchElementException | NoSuchFieldException e) {
+			e.printStackTrace(Trace.excStream);
+		}
+		
+		response = buildResponse(status, errors);
+		
+		response.getJSONObject("response").put("adresses", adresses);
+		return response;
+	}
+
+	public JSONObject toJSON(Indirizzo ind) {
+		JSONObject address = new JSONObject();
+		
+		
+		
+		return address;
+	}
+	//72XXX >
+}
