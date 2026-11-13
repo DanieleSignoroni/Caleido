@@ -59,8 +59,7 @@ public class YPsnDatiEcommerceSerie extends YPsnDatiEcommerceSeriePO {
 		if (idAzienda == null || idAzienda.trim().length() == 0)
 			throw new IllegalArgumentException("Azienda obbligatoria");
 		try {
-			Vector rows = retrieveList(
-					YPsnDatiEcommerceSerieTM.ID_AZIENDA + " = '" + idAzienda + "'", null, true);
+			Vector rows = retrieveList(YPsnDatiEcommerceSerieTM.ID_AZIENDA + " = '" + idAzienda + "'", "", true);
 			return selectForNazione(rows, nazione);
 		} catch (ClassNotFoundException ex) {
 			throw new SQLException("Classe configurazione non disponibile", ex);

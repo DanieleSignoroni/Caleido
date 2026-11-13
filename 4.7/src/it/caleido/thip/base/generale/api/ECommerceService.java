@@ -1,6 +1,7 @@
 package it.caleido.thip.base.generale.api;
 
 import java.math.BigDecimal;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import com.thera.thermfw.ad.ClassADCollectionManager;
 import com.thera.thermfw.base.TimeUtils;
 import com.thera.thermfw.base.Trace;
 import com.thera.thermfw.collector.BODataCollector;
+import com.thera.thermfw.common.BusinessObject;
 import com.thera.thermfw.common.ErrorMessage;
 import com.thera.thermfw.gui.cnr.OpenType;
 import com.thera.thermfw.persist.CachedStatement;
@@ -36,6 +38,8 @@ import com.thera.thermfw.type.EnumType;
 import it.caleido.thip.base.articolo.YArticolo;
 import it.caleido.thip.base.articolo.YArticoloDatiTecnici;
 import it.caleido.thip.base.connettori.utils.YPsnDatiEcommerce;
+import it.caleido.thip.base.connettori.utils.YPsnDatiEcommerceSerie;
+import it.caleido.thip.base.connettori.utils.YPsnDatiEcommerceCausale;
 import it.caleido.thip.datiTecnici.configuratore.YFasceColoriTM;
 import it.caleido.thip.datiTecnici.configuratore.YModelloTermostato;
 import it.caleido.thip.datiTecnici.configuratore.YModelloTermostatoTM;
@@ -46,6 +50,7 @@ import it.thera.thip.base.cliente.Cliente;
 import it.thera.thip.base.cliente.ClienteVendita;
 import it.thera.thip.base.comuniVenAcq.CondizioniDiVenditaParams;
 import it.thera.thip.base.generale.NumeratoreHandler;
+import it.thera.thip.base.generale.ParametroPsn;
 import it.thera.thip.base.listini.ListinoVendita;
 import it.thera.thip.base.partner.AnagraficoDiBase;
 import it.thera.thip.base.partner.Indirizzo;
@@ -309,14 +314,209 @@ public class ECommerceService {
 	}
 
 	//72XXX <
-	public JSONObject creaOffertaClienteFromJSON(String body) {
-		JSONObject response = new JSONObject();
-		Status status = Status.OK;
-		Collection<ErrorMessage> errors = new ArrayList<>();
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public Vector validaDatiRicezioneOfferta(JSONObject bodyAsJSON) throws NoSuchElementException, NoSuchFieldException {
+		Vector errors = new Vector();
+		BODataCollector boDCCLI = createDataCollector("ClienteVendita");
 
-		response = buildResponse(status, errors);
-		return response;
+		if (!bodyAsJSON.has("IdCliente")) {
+			ErrorMessage err = new ErrorMessage("BAS0000000");
+			aggiungiComponenteInErrore("IdCliente", "Cliente", boDCCLI, err);
+			errors.add(err);
+			return errors;
+		}
+
+		int rc = boDCCLI.retrieve(
+				KeyHelper.buildObjectKey(new String[] {
+						Azienda.getAziendaCorrente(),
+						bodyAsJSON.getString("IdCliente")
+				}));
+
+		if (rc == BODataCollector.ERROR) {
+			errors.addAll(boDCCLI.getErrorList().getErrors());
+			for (Iterator iterator = errors.iterator(); iterator.hasNext();) {
+				ErrorMessage em = (ErrorMessage) iterator.next();
+				if(em.getId().equals("BAS0000004")) {
+					aggiungiComponenteInErrore("IdCliente", "Cliente", boDCCLI, em);
+				}
+			}
+			return errors;
+		}
+
+		String flag = bodyAsJSON.getString("Preventivo");
+
+		if (!"Y".equals(flag) && !"N".equals(flag))
+			errors.add(new ErrorMessage("BAS0000078","Preventivo deve essere Y oppure N"));
+
+		JSONArray righe = bodyAsJSON.getJSONArray("righe");
+		if (righe.length() == 0)
+			errors.add(new ErrorMessage("BAS0000078","Indicare almeno una riga offerta"));
+
+		return errors;
 	}
+
+	@SuppressWarnings("unchecked")
+	public JSONObject creaOffertaClienteFromJSON(String body) {
+		Collection<ErrorMessage> errors = new ArrayList<>();
+		try {
+			JSONObject json = new JSONObject(body);
+			errors = validaDatiRicezioneOfferta(json);
+			if (!errors.isEmpty())
+				return buildResponse(Status.BAD_REQUEST, errors);
+
+			ConnectionManager.pushConnection();
+			boolean committed = false;
+			try {
+				Cliente cliente = (Cliente) Cliente.elementWithKey(Cliente.class,
+						KeyHelper.buildObjectKey(new String[] { Azienda.getAziendaCorrente(), json.getString("IdCliente") }), PersistentObject.NO_LOCK);
+
+				YPsnDatiEcommerce parametri = YPsnDatiEcommerce.getCurrentYPsnDatiEcommerce();
+				if (parametri == null)
+					throw erroreGenerico("Configurazione e-commerce non presente", Status.INTERNAL_SERVER_ERROR);
+
+				OffertaCliente offerta = creaTestataOffertaEcommerce(json, cliente, parametri);
+
+				JSONArray righe = json.getJSONArray("righe");
+				
+				for (int i = 0; i < righe.length(); i++) {
+					OffertaClienteRigaPrm riga = creaRigaOffertaEcommerce(offerta, righe.getJSONObject(i), parametri);
+					
+					offerta.getRighe().add(riga);
+				}
+				
+				offerta.setSalvaRighe(true);
+				
+				salvaOggettoOffertaEcommerce("OffertaCliente", offerta);
+
+				JSONObject response = buildResponse(Status.OK, errors);
+
+				JSONObject result = response.getJSONObject("response");
+				
+				result.put("offertaCreated", true);
+				result.put("keyOfferta", offerta.getKey());
+
+				ConnectionManager.commit();
+
+				committed = true;
+				return response;
+			} finally {
+				try {
+					if (!committed)
+						ConnectionManager.rollback();
+				} finally {
+					ConnectionManager.popConnection();
+				}
+			}
+		} catch (PantheraApiException e) {
+			return buildResponse((Status) e.getHTTPStatus(), e.getErrors());
+		} catch (org.json.JSONException | IllegalArgumentException | java.time.format.DateTimeParseException e) {
+			errors.add(new ErrorMessage("BAS0000078", e.getMessage()));
+			return buildResponse(Status.BAD_REQUEST, errors);
+		} catch (Exception e) {
+			e.printStackTrace(Trace.excStream);
+			errors.add(new ErrorMessage("BAS0000078", "Creazione offerta non riuscita: " + e.getMessage()));
+			return buildResponse(Status.INTERNAL_SERVER_ERROR, errors);
+		}
+	}
+
+	protected OffertaCliente creaTestataOffertaEcommerce(JSONObject json, Cliente cliente, YPsnDatiEcommerce parametri) throws Exception {
+		String nazione = cliente.getIdNazione();
+		YPsnDatiEcommerceSerie serie = YPsnDatiEcommerceSerie.findForNazione(cliente.getIdAzienda(), nazione);
+		YPsnDatiEcommerceCausale causale = YPsnDatiEcommerceCausale.findForNazione(cliente.getIdAzienda(), nazione, "Y".equals(json.getString("Preventivo")));
+		if (serie == null || causale == null)
+			throw erroreGenerico("Serie o causale e-commerce non configurata per nazione " + nazione + " e Preventivo=" + json.getString("Preventivo"), Status.INTERNAL_SERVER_ERROR);
+
+		java.sql.Date oggi = TimeUtils.getCurrentDate();
+		OffertaCliente offerta = (OffertaCliente) Factory.createObject(OffertaCliente.class);
+		offerta.setIdAzienda(cliente.getIdAzienda());
+		offerta.getNumeratoreHandler().setDataDocumento(oggi);
+		offerta.getNumeratoreHandler().setIdNumeratore(serie.getRNumeratore());
+		offerta.getNumeratoreHandler().setIdSerie(serie.getRSerie());
+		offerta.setIdCau(causale.getRCausale());
+		offerta.setIdCliente(json.getString("IdCliente"));
+		offerta.setTipoIntestatarioOfferta(OffertaCliente.TIPO_INTESTATARIO_CLIENTE);
+
+		offerta.completaBO();
+
+		offerta.setNumeroOrdineIntestatario(json.optString("IdOrdineECommerce", null));
+		offerta.setRichiedenteCliente(json.optString("Referente", null));
+		offerta.setNota(json.optString("Note", null));
+		String richiesta = json.optString("DataRichiesta", "").trim();
+		DateType dt = new DateType();
+		if (richiesta == null || richiesta.trim().isEmpty()) {
+			String settimaneStr = ParametroPsn.getValoreParametroPsn("YPsnDatiEcommerce", "NumeroSettimaneAvantiDtRcs");
+			int settimane = (settimaneStr != null && !settimaneStr.trim().isEmpty()) ? Integer.parseInt(settimaneStr.trim()) : 5;
+			if (settimane > 0) {
+				offerta.setDataConsegnaRichiesta(TimeUtils.addDays(TimeUtils.getCurrentDate(), settimane * 7));
+			}
+		} else {
+			offerta.setDataConsegnaRichiesta((Date) dt.stringToObject(richiesta));
+		}
+		offerta.setDataFineValidita(java.sql.Date.valueOf(oggi.toLocalDate().plusDays(parametri.getGiorniValiditaOfferta() == null ? 30 : parametri.getGiorniValiditaOfferta())));
+		impostaDestinazioneOffertaEcommerce(offerta, cliente, json);
+		return offerta;
+	}
+
+	protected void impostaDestinazioneOffertaEcommerce(OffertaCliente offerta, Cliente cliente, JSONObject json) throws Exception {
+		String sequenza = json.optString("IdSequenzaIndirizzo", "").trim();
+		if (sequenza.length() > 0) {
+			BigDecimal idSequenza = new BigDecimal(sequenza);
+			offerta.setIdSequenzaInd(idSequenza);
+		}
+	}
+
+	protected OffertaClienteRigaPrm creaRigaOffertaEcommerce(OffertaCliente offerta, JSONObject json, YPsnDatiEcommerce parametri)
+			throws Exception {
+		String idArticolo = json.getString("idArticolo");
+		Articolo articolo = (Articolo) Articolo.elementWithKey(Articolo.class,KeyHelper.buildObjectKey(new String[] { offerta.getIdAzienda(), idArticolo }), PersistentObject.NO_LOCK);
+		if (articolo == null)
+			throw new IllegalArgumentException("Articolo non presente: " + idArticolo);
+		BigDecimal quantita = new BigDecimal(json.get("qta").toString());
+		if (quantita.signum() <= 0)
+			throw new IllegalArgumentException("Quantita non positiva per articolo " + idArticolo);
+		Configurazione configurazione = null;
+		if (json.has("idConfigurazione") && !json.isNull("idConfigurazione")) {
+			Integer idConfigurazione = Integer.valueOf(json.get("idConfigurazione").toString());
+			configurazione = Configurazione.elementWithKey(KeyHelper.buildObjectKey(
+					new Object[] { offerta.getIdAzienda(), idConfigurazione }), PersistentObject.NO_LOCK);
+			if (configurazione == null || !idArticolo.equals(configurazione.getIdArticolo()))
+				throw new IllegalArgumentException("Configurazione non presente o non appartenente all'articolo " + idArticolo);
+		}
+		if (articolo.isConfigurato() && configurazione == null)
+			throw new IllegalArgumentException("Indicare idConfigurazione per articolo " + idArticolo);
+		OffertaClienteRigaPrm riga = (OffertaClienteRigaPrm) Factory.createObject(OffertaClienteRigaPrm.class);
+		riga.setTestata(offerta);
+		riga.setIdAzienda(offerta.getIdAzienda());
+		riga.completaBO();
+		riga.setArticolo(articolo);
+		riga.setConfigurazione(configurazione);
+		riga.setQtaInUMRif(quantita);
+		riga.setIdUMRif(articolo.getIdUMRiferimento());
+		riga.setIdUMPrm(articolo.getIdUMPrmMag());
+		riga.cambiaArticolo(articolo, configurazione, false);
+		riga.setDataConsegnaRichiesta(offerta.getDataConsegnaRichiesta());
+		riga.setNota(json.optString("note", json.optString("Note", null)));
+		return riga;
+	}
+
+	@SuppressWarnings("unchecked")
+	protected void salvaOggettoOffertaEcommerce(String descrittore, BusinessObject oggetto) throws Exception {
+		BODataCollector dc = createDataCollector(descrittore);
+		dc.setAutoCommit(false);
+		dc.setBo(oggetto);
+		if (dc.initSecurityServices(OpenType.NEW, true, true, true) == BODataCollector.ERROR)
+			throw new PantheraApiException(Status.FORBIDDEN, dc.getErrorList().getErrors());
+		if (dc.save() != BODataCollector.OK) {
+			if (!dc.getErrorList().getErrors().isEmpty())
+				throw new PantheraApiException(Status.BAD_REQUEST, dc.getErrorList().getErrors());
+			throw erroreGenerico("Salvataggio " + descrittore + " non riuscito", Status.BAD_REQUEST);
+		}
+	}
+
+	protected PantheraApiException erroreGenerico(String messaggio, Status status) {
+		return new PantheraApiException(status, new ErrorMessage("BAS0000078", messaggio));
+	}
+
 	//72XXX >
 
 	public OffertaCliente creaOffertaCliente(String idCliente) {
@@ -885,7 +1085,7 @@ public class ECommerceService {
 		JSONObject response = new JSONObject();
 		Status status = Status.OK;
 		Collection<ErrorMessage> errors = new ArrayList<>();
-		
+
 		JSONArray adresses = new JSONArray();
 
 		BODataCollector boDCCLI = createDataCollector("Cliente");
@@ -909,7 +1109,7 @@ public class ECommerceService {
 					Iterator iterIndirizzi = anagrafico.getIndirizzi().iterator();
 					while(iterIndirizzi.hasNext()) {
 						Indirizzo ind = (Indirizzo) iterIndirizzi.next();
-						
+
 						adresses.put(toJSON(ind));
 					}
 				}
@@ -917,16 +1117,16 @@ public class ECommerceService {
 		}catch (NoSuchElementException | NoSuchFieldException e) {
 			e.printStackTrace(Trace.excStream);
 		}
-		
+
 		response = buildResponse(status, errors);
-		
+
 		response.getJSONObject("response").put("adresses", adresses);
 		return response;
 	}
 
 	public JSONObject toJSON(Indirizzo ind) {
 		JSONObject address = new JSONObject();
-		
+
 		address.put("nrIndirizzo", ind.getIdSequenzaIndirizzo());
 		address.put("ragioneSociale", ind.getRagioneSociale());
 		address.put("ragioneSociale2", ind.getRagioneSociale2());
@@ -939,7 +1139,7 @@ public class ECommerceService {
 		address.put("CAP", ind.getDatiIndirizzo().getCAP());
 		address.put("idProvincia", ind.getDatiIndirizzo().getIdProvincia());
 		address.put("idNazione", ind.getDatiIndirizzo().getIdNazione());
-		
+
 		return address;
 	}
 	//72XXX >
