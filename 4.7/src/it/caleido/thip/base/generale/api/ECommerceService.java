@@ -376,22 +376,35 @@ public class ECommerceService {
 
 				OffertaCliente offerta = creaTestataOffertaEcommerce(json, cliente, parametri);
 
+				BODataCollector bodcOff = createDataCollector("OffertaCliente");
+				bodcOff.setBo(offerta);
+
+				readExtraData(bodcOff, json);
+
 				JSONArray righe = json.getJSONArray("righe");
-				
+
 				for (int i = 0; i < righe.length(); i++) {
-					OffertaClienteRigaPrm riga = creaRigaOffertaEcommerce(offerta, righe.getJSONObject(i), parametri);
-					
+					JSONObject jsonRiga = righe.getJSONObject(i);
+
+					OffertaClienteRigaPrm riga = creaRigaOffertaEcommerce(offerta, jsonRiga, parametri);
+
+					BODataCollector bodcOffRig = createDataCollector("OffertaClienteRigaPrm");
+					bodcOffRig.setBo(riga);
+
+					readExtraData(bodcOffRig, jsonRiga);
+
 					offerta.getRighe().add(riga);
 				}
-				
+
 				offerta.setSalvaRighe(true);
-				
-				salvaOggettoOffertaEcommerce("OffertaCliente", offerta);
+
+				bodcOff.loadAttValue(); //per caricare sui component manager i valori messi sul bo (serve per le check)
+				salvaOggettoOffertaEcommerce(bodcOff, offerta);
 
 				JSONObject response = buildResponse(Status.OK, errors);
 
 				JSONObject result = response.getJSONObject("response");
-				
+
 				result.put("offertaCreated", true);
 				result.put("keyOfferta", offerta.getKey());
 
@@ -419,6 +432,34 @@ public class ECommerceService {
 		}
 	}
 
+	/**
+	 * Serve per poter leggere dal JSON eventuali attributi strutturati come --> "ClassName.AttributeName".<br>
+	 * es: "OffertaCliente.Nota"
+	 * @param boDC
+	 * @param payload
+	 * @throws PantheraApiException
+	 */
+	public void readExtraData(BODataCollector boDC, JSONObject payload) throws PantheraApiException{
+		boolean atLeastOneReaded = false;
+		for (String name : payload.keySet()) {
+			JSONObject data = new JSONObject();
+			data.put(name, payload.get(name));
+			try {
+				if(name.startsWith(boDC.getClassADCollection().getClassName()+".")) {
+					boDC.read(name, data);
+					atLeastOneReaded = true;
+				}
+			}catch (Exception e) {
+				ErrorMessage em = new ErrorMessage("BAS0000078","Componente di base "+name+", errore nel settaggio dati");
+				em.addComponent(name, boDC.getClassADCollection().getAttribute(name).getAttributeName(), 
+						boDC.getComponent(name));
+				throw new PantheraApiException(Status.INTERNAL_SERVER_ERROR,em);
+			}
+		}
+		if(atLeastOneReaded)
+			boDC.setOnBORecursive(); //setto sul bo i valori registrati sui componenti di base
+	}
+
 	protected OffertaCliente creaTestataOffertaEcommerce(JSONObject json, Cliente cliente, YPsnDatiEcommerce parametri) throws Exception {
 		String nazione = cliente.getIdNazione();
 		YPsnDatiEcommerceSerie serie = YPsnDatiEcommerceSerie.findForNazione(cliente.getIdAzienda(), nazione);
@@ -438,9 +479,6 @@ public class ECommerceService {
 
 		offerta.completaBO();
 
-		offerta.setNumeroOrdineIntestatario(json.optString("IdOrdineECommerce", null));
-		offerta.setRichiedenteCliente(json.optString("Referente", null));
-		offerta.setNota(json.optString("Note", null));
 		String richiesta = json.optString("DataRichiesta", "").trim();
 		DateType dt = new DateType();
 		if (richiesta == null || richiesta.trim().isEmpty()) {
@@ -479,11 +517,9 @@ public class ECommerceService {
 			Integer idConfigurazione = Integer.valueOf(json.get("idConfigurazione").toString());
 			configurazione = Configurazione.elementWithKey(KeyHelper.buildObjectKey(
 					new Object[] { offerta.getIdAzienda(), idConfigurazione }), PersistentObject.NO_LOCK);
-			if (configurazione == null || !idArticolo.equals(configurazione.getIdArticolo()))
-				throw new IllegalArgumentException("Configurazione non presente o non appartenente all'articolo " + idArticolo);
+			if (configurazione == null)
+				throw new IllegalArgumentException("Configurazione non esistente");
 		}
-		if (articolo.isConfigurato() && configurazione == null)
-			throw new IllegalArgumentException("Indicare idConfigurazione per articolo " + idArticolo);
 		OffertaClienteRigaPrm riga = (OffertaClienteRigaPrm) Factory.createObject(OffertaClienteRigaPrm.class);
 		riga.setTestata(offerta);
 		riga.setIdAzienda(offerta.getIdAzienda());
@@ -500,17 +536,16 @@ public class ECommerceService {
 	}
 
 	@SuppressWarnings("unchecked")
-	protected void salvaOggettoOffertaEcommerce(String descrittore, BusinessObject oggetto) throws Exception {
-		BODataCollector dc = createDataCollector(descrittore);
+	protected void salvaOggettoOffertaEcommerce(BODataCollector dc, BusinessObject bo) throws Exception {
 		dc.setAutoCommit(false);
-		dc.setBo(oggetto);
-		if (dc.initSecurityServices(OpenType.NEW, true, true, true) == BODataCollector.ERROR)
+		dc.setBo(bo);
+		int rc = dc.initSecurityServices(OpenType.NEW, true, true, true);
+		if(rc == BODataCollector.ERROR)
 			throw new PantheraApiException(Status.FORBIDDEN, dc.getErrorList().getErrors());
-		if (dc.save() != BODataCollector.OK) {
-			if (!dc.getErrorList().getErrors().isEmpty())
-				throw new PantheraApiException(Status.BAD_REQUEST, dc.getErrorList().getErrors());
-			throw erroreGenerico("Salvataggio " + descrittore + " non riuscito", Status.BAD_REQUEST);
-		}
+		else
+			rc = dc.save();
+		if(rc == BODataCollector.ERROR)
+			throw new PantheraApiException(Status.BAD_REQUEST, dc.getErrorList().getErrors());
 	}
 
 	protected PantheraApiException erroreGenerico(String messaggio, Status status) {
