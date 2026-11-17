@@ -83,7 +83,7 @@ import it.thera.thip.vendite.offerteCliente.OffertaClienteRigaPrm;
  * Revisions:
  * Number   Date        Owner    Description
  * 72630    28/08/2026  DSSOF3   Prima stesura
- * 72XXX	12/11/2026	DSSFO3	 Creazione offerta.
+ * 72754	12/11/2026	DSSFO3	 Creazione offerta.
  */
 
 public class ECommerceService {
@@ -313,7 +313,7 @@ public class ECommerceService {
 		return errors;
 	}
 
-	//72XXX <
+	//72754 <
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public Vector validaDatiRicezioneOfferta(JSONObject bodyAsJSON) throws NoSuchElementException, NoSuchFieldException {
 		Vector errors = new Vector();
@@ -398,7 +398,6 @@ public class ECommerceService {
 
 				offerta.setSalvaRighe(true);
 
-				bodcOff.loadAttValue(); //per caricare sui component manager i valori messi sul bo (serve per le check)
 				salvaOggettoOffertaEcommerce(bodcOff, offerta);
 
 				JSONObject response = buildResponse(Status.OK, errors);
@@ -442,18 +441,20 @@ public class ECommerceService {
 	public void readExtraData(BODataCollector boDC, JSONObject payload) throws PantheraApiException{
 		boolean atLeastOneReaded = false;
 		for (String name : payload.keySet()) {
-			JSONObject data = new JSONObject();
-			data.put(name, payload.get(name));
-			try {
-				if(name.startsWith(boDC.getClassADCollection().getClassName()+".")) {
-					boDC.read(name, data);
+			if(name.startsWith(boDC.getClassADCollection().getClassName()+".")) {
+				String nameWithoutClassName = name.replace((boDC.getClassADCollection().getClassName()+"."), "");
+
+				JSONObject data = new JSONObject();
+				data.put(nameWithoutClassName, payload.get(name));
+				try {
+					boDC.read(nameWithoutClassName, data);
 					atLeastOneReaded = true;
+				}catch (Exception e) {
+					ErrorMessage em = new ErrorMessage("BAS0000078","Componente di base "+name+", errore nel settaggio dati");
+					em.addComponent(name, boDC.getClassADCollection().getAttribute(name).getAttributeName(), 
+							boDC.getComponent(name));
+					throw new PantheraApiException(Status.INTERNAL_SERVER_ERROR,em);
 				}
-			}catch (Exception e) {
-				ErrorMessage em = new ErrorMessage("BAS0000078","Componente di base "+name+", errore nel settaggio dati");
-				em.addComponent(name, boDC.getClassADCollection().getAttribute(name).getAttributeName(), 
-						boDC.getComponent(name));
-				throw new PantheraApiException(Status.INTERNAL_SERVER_ERROR,em);
 			}
 		}
 		if(atLeastOneReaded)
@@ -552,7 +553,7 @@ public class ECommerceService {
 		return new PantheraApiException(status, new ErrorMessage("BAS0000078", messaggio));
 	}
 
-	//72XXX >
+	//72754 >
 
 	public OffertaCliente creaOffertaCliente(String idCliente) {
 		OffertaCliente offerta = (OffertaCliente) Factory.createObject(OffertaCliente.class);
@@ -1114,7 +1115,7 @@ public class ECommerceService {
 		return dataCollector;
 	}
 
-	//72XXX <
+	//72754 <
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public JSONObject customerAdresses(String idCliente) {
 		JSONObject response = new JSONObject();
@@ -1177,5 +1178,5 @@ public class ECommerceService {
 
 		return address;
 	}
-	//72XXX >
+	//72754 >
 }

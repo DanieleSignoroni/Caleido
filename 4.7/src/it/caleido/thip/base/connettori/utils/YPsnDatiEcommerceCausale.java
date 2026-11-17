@@ -23,7 +23,7 @@ import com.thera.thermfw.persist.Database;
 /*
  * Revisions:
  * Number   Date        Owner    Description
- * 72XXX    13/11/2026  DSSOF3   Prima stesura
+ * 72754    13/11/2026  DSSOF3   Prima stesura
  */
 
 public class YPsnDatiEcommerceCausale extends YPsnDatiEcommerceCausalePO {

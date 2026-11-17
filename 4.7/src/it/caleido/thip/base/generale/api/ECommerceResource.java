@@ -28,7 +28,7 @@ import com.thera.thermfw.rs.BaseResource;
  * Revisions:
  * Number   Date        Owner    Description
  * 72630    28/08/2026  DSSOF3   Prima stesura
- * 72XXX	12/11/2026	DSSFO3	 Creazione offerta.
+ * 72754	12/11/2026	DSSFO3	 Creazione offerta.
  */
 
 @Path("/caleido/ecommerce")
@@ -43,7 +43,7 @@ public class ECommerceResource extends BaseResource {
 		return buildResponse((StatusType) response.get("status"),response.get("response"));
 	}
 
-	//72XXX <
+	//72754 <
 	@GET
 	@Path("/customer/adresses")
 	public Response customerAdresses(@QueryParam("IdCliente") String idCliente) {
@@ -59,5 +59,5 @@ public class ECommerceResource extends BaseResource {
 		JSONObject response = service.creaOffertaClienteFromJSON(body);
 		return buildResponse((StatusType) response.get("status"),response.get("response"));
 	}
-	//72XXX >
+	//72754 >
 }

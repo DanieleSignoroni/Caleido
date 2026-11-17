@@ -35,7 +35,7 @@ import it.thera.thip.cs.EntitaAzienda;
 /*
  * Revisions:
  * Number   Date        Owner    Description
- * 72XXX    13/11/2026  DSSOF3   Prima stesura
+ * 72754    13/11/2026  DSSOF3   Prima stesura
  */
 
 public abstract class YPsnDatiEcommerceSeriePO extends EntitaAzienda implements BusinessObject, Authorizable, Deletable, Conflictable, Child {
