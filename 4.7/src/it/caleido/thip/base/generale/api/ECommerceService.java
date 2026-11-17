@@ -405,7 +405,7 @@ public class ECommerceService {
 				JSONObject result = response.getJSONObject("response");
 
 				result.put("offertaCreated", true);
-				result.put("keyOfferta", offerta.getKey());
+				result.put("keyOfferta", KeyHelper.formatKeyString(offerta.getKey()));
 
 				ConnectionManager.commit();
 
@@ -450,9 +450,8 @@ public class ECommerceService {
 					boDC.read(nameWithoutClassName, data);
 					atLeastOneReaded = true;
 				}catch (Exception e) {
-					ErrorMessage em = new ErrorMessage("BAS0000078","Componente di base "+name+", errore nel settaggio dati");
-					em.addComponent(name, boDC.getClassADCollection().getAttribute(name).getAttributeName(), 
-							boDC.getComponent(name));
+					ErrorMessage em = new ErrorMessage("BAS0000078","Componente di base "+name+", errore nel settaggio dati: "+(e.getMessage()));
+					em.addComponent(name, boDC.getClassADCollection().getAttribute(nameWithoutClassName).getAttributeName(), boDC.getComponent(nameWithoutClassName));
 					throw new PantheraApiException(Status.INTERNAL_SERVER_ERROR,em);
 				}
 			}
